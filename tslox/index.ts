@@ -1,1 +1,3 @@
-console.log("hello world!");
+import { main } from './lox';
+
+main();
