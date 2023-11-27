@@ -31,6 +31,7 @@ function defineAst(
   const writeStream = createWriteStream(path_, "utf8");
 
   writeStream.write(`import { Token } from './token';
+import { Value } from './value';
 
 `);
 

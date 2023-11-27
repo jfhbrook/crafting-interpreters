@@ -1,4 +1,4 @@
 Binary   :: left: Expr, operator: Token, right: Expr
 Grouping :: expression: Expr
-Literal  :: value: any
+Literal  :: value: Value
 Unary    :: operator: Token, right: Expr

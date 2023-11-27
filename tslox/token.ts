@@ -1,3 +1,5 @@
+import { Value } from './value';
+
 export enum TokenType {
   // Single-character tokens.
   LeftParen='(', RightParen=')', LeftBrace='{', RightBrace='}',
@@ -20,7 +22,7 @@ export class Token {
   constructor(
     public readonly type: TokenType,
     public readonly lexeme: string,
-    public readonly literal: any,
+    public readonly literal: Value,
     public readonly line: number
   ) {}
 

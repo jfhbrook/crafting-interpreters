@@ -1,4 +1,5 @@
 import { Token, TokenType } from './token';
+import { Value } from './value';
 import { errors } from './error';
 
 // this, of course, only works if c is length 1. but of course it is, right?
@@ -156,7 +157,7 @@ export class Scanner {
     return this.source[this.current++];
   }
 
-  addToken(type: TokenType, literal: any = null): void {
+  addToken(type: TokenType, literal: Value = null): void {
     const text = this.source.slice(this.start, this.current);
     this.tokens.push(new Token(type, text, literal, this.line));
   }
