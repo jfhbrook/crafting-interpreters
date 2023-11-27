@@ -32,7 +32,14 @@ function defineAst(
 
   writeStream.write(`import { Token } from './token';
 
-export abstract class Expr {}
+`);
+
+  defineVisitor(writeStream, baseName, types);
+
+
+  writeStream.write(`export abstract class ${baseName} {
+  abstract accept<R>(visitor: ${baseName}Visitor<R>): R;
+}
 
 `);
 
@@ -45,6 +52,25 @@ export abstract class Expr {}
   }
 
   writeStream.close();
+}
+
+function defineVisitor(
+  writeStream: WriteStream,
+  baseName: string,
+  types: string[]
+): void {
+  writeStream.write(`export interface ${baseName}Visitor<R> {
+`);
+  let typeName: string = '';
+  for (let type of types) {
+    typeName = type.split('::')[0].trim();
+    writeStream.write(`  visit${typeName}${baseName}(${baseName.toLowerCase()}: ${typeName}): R;
+`);
+  }
+  writeStream.write(`}
+
+`);
+
 }
 
 function defineType(
@@ -66,6 +92,10 @@ function defineType(
 
   writeStream.write(`  ) {
     super();
+  }
+
+  accept<R>(visitor: ${baseName}Visitor<R>): R {
+    return visitor.visit${className}${baseName}(this);
   }
 }
 

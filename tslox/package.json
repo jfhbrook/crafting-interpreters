@@ -4,9 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npm run ast:generate && tsc ./*.ts && node ./index.js",
+    "build": "npm run ast:generate && tsc ./*.ts",
+    "start": "npm run build && node ./index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ast:generate": "tsc ./scripts/generate-ast.ts && node ./scripts/generate-ast.js ."
+    "ast:generate": "tsc ./scripts/generate-ast.ts && node ./scripts/generate-ast.js .",
+    "console": "npm run build && node"
   },
   "author": "Josh Holbrook",
   "license": "ISC",
