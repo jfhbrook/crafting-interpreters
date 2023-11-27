@@ -9,8 +9,8 @@ function main(): void {
   }
   const outputDir: string = args[0];
   const baseName: string = "Expr";
-  const types: string[] = readTypes(outputDir, baseName);
-  defineAst(outputDir, baseName, types);
+  defineAst(outputDir, "Expr");
+  defineAst(outputDir, "Stmt");
 }
 
 function readTypes(
@@ -18,15 +18,15 @@ function readTypes(
   baseName: string
 ): string[] {
   return readFileSync(
-    path.join(outputDir, `${baseName.toLowerCase()}.xp`), "utf8"
+    path.join(outputDir, `${baseName.toLowerCase()}.ast`), "utf8"
   ).trim().split('\n');
 }
 
 function defineAst(
   outputDir: string,
-  baseName: string,
-  types: string[]
+  baseName: string
 ): void {
+  const types = readTypes(outputDir, baseName);
   const path_ = path.join(outputDir, `${baseName.toLowerCase()}.ts`);
   const writeStream = createWriteStream(path_, "utf8");
 
