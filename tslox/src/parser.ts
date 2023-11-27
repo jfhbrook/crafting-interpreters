@@ -1,5 +1,6 @@
 import { Token, TokenType } from './token';
 import * as expr from './expr';
+import * as stmt from './stmt';
 import { errors } from './error';
 
 class ParseError extends Error {
@@ -21,15 +22,13 @@ export class Parser {
     this.current = 0;
   }
 
-  public parse(): expr.Expr | null {
-    try {
-      return this.expression();
-    } catch (err) {
-      if (err instanceof ParseError) {
-        return null;
-      }
-      throw err;
+  public parse(): stmt.Stmt[] {
+    const statements: stmt.Stmt[] = [];
+    while (!this.isAtEnd()) {
+      statements.push(this.statement());
     }
+
+    return statements;
   }
 
   private match(...types: TokenType[]): boolean {
@@ -108,6 +107,23 @@ export class Parser {
 
       this.advance();
     }
+  }
+
+  private statement(): stmt.Stmt {
+    if (this.match(TokenType.Print)) return this.printStatement();
+    return this.expressionStatement();
+  }
+
+  private printStatement(): stmt.Stmt {
+    const ex = this.expression();
+    this.consume(TokenType.Semicolon, "Expect ';' after value.");
+    return new stmt.Print(ex);
+  }
+
+  private expressionStatement(): stmt.Stmt {
+    const ex = this.expression();
+    this.consume(TokenType.Semicolon, "Expect ';' after value.");
+    return new stmt.Expression(ex);
   }
 
   private expression(): expr.Expr {

@@ -1,11 +1,25 @@
 import * as expr from './expr';
+import * as stmt from './stmt';
 
-export class AstPrinter implements expr.Visitor<string> {
-  print(expr: expr.Expr | null): string {
-    if (!expr) {
+export class AstPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
+  print(node: stmt.Stmt[] | expr.Expr | stmt.Stmt | null): string {
+    if (node instanceof Array) {
+      return `[${node.map(this.print.bind(this)).join(' ')}]`;
+    } else if (node instanceof expr.Expr) {
+      return node.accept(this);
+    } else if (node instanceof stmt.Stmt) {
+      return node.accept(this);
+    } else {
       return '';
     }
-    return expr.accept(this);
+  }
+
+  visitExpressionStmt(stmt: stmt.Expression): string {
+    return this.parenthesize("expr", stmt.expression);
+  }
+
+  visitPrintStmt(stmt: stmt.Print): string {
+    return this.parenthesize("print", stmt.expression);
   }
 
   visitBinaryExpr(expr: expr.Binary): string {

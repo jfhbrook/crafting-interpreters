@@ -1,4 +1,5 @@
 import * as expr from './expr';
+import * as stmt from './stmt';
 import { Token, TokenType } from './token';
 import { Value } from './value';
 import { errors, RuntimeError } from './error';
@@ -20,11 +21,18 @@ function withNumberOperands(
   throw new RuntimeError(operator, "Operands must be numbers.");
 }
 
-export class Interpreter implements expr.Visitor<Value> {
-  public interpret(expression: expr.Expr): void {
+export interface InterpreterOptions {
+  repl: boolean;
+}
+
+export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
+  public options: InterpreterOptions = { repl: false };
+
+  public interpret(statements: stmt.Stmt[], options?: InterpreterOptions): void {
     try {
-      const value = this.evaluate(expression);
-      console.log(this.stringify(value));
+      for (let statement of statements) {
+        this.execute(statement);
+      }
     } catch (err) {
       if (err instanceof RuntimeError) {
         errors.runtimeError(err);
@@ -46,6 +54,10 @@ export class Interpreter implements expr.Visitor<Value> {
     return String(value);
   }
 
+  private execute<S extends stmt.Stmt>(st: S): void {
+    st.accept(this);
+  }
+
   private evaluate<E extends expr.Expr>(ex: E): Value {
     return ex.accept(this);
   }
@@ -60,6 +72,18 @@ export class Interpreter implements expr.Visitor<Value> {
     if (a === null && b === null) return true;
     if (a === null) return false;
     return a === b;
+  }
+
+  visitExpressionStmt(stmt: stmt.Expression): void {
+    const value = this.evaluate(stmt.expression);
+    if (this.options.repl) {
+      console.log(this.stringify(value));
+    }
+  }
+
+  visitPrintStmt(stmt: stmt.Print): void {
+    const value = this.evaluate(stmt.expression);
+    console.log(this.stringify(value));
   }
 
   visitBinaryExpr(ex: expr.Binary): Value {

@@ -49,16 +49,25 @@ async function runFile(file: string): Promise<void> {
 }
 
 async function runPrompt(): Promise<void> {
+  interpreter.options = { repl: true };
   let line: string = '';
 
   while (true) {
     try {
       line = await read({ prompt: '> ' });
 
-      await run(line);
+      line.trim();
 
-      errors.hadError = false;
-      errors.hadRuntimeError = false;
+      if (line.length && line[line.length - 1] !== ';') {
+        line += ';';
+      }
+
+      if (line.length) {
+        await run(line);
+
+        errors.hadError = false;
+        errors.hadRuntimeError = false;
+      }
     } catch (err) {
       console.error(err);
       break;
@@ -82,19 +91,17 @@ async function run(source: string): Promise<void> {
   // console.log(tokens);
 
   const parser = new Parser(tokens);
-  const expression = parser.parse();
+  const statements = parser.parse();
 
   if (errors.hadError) return;
 
   if (process.env.DEBUG) {
     const printer = new AstPrinter();
 
-    console.log(printer.print(expression));
+    console.log(printer.print(statements));
   }
 
-  if (expression) {
-    interpreter.interpret(expression);
-  }
+  interpreter.interpret(statements);
 }
 
 
