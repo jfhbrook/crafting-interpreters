@@ -2,14 +2,14 @@
   "name": "tslox",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lox.js",
   "scripts": {
-    "build": "npm run ast:generate && tsc ./*.ts",
-    "start": "npm run build && node ./index.js",
+    "build": "npm run ast:generate && tsc ./src/*.ts",
+    "start": "npm run build && node ./src/main.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ast:generate": "tsc ./scripts/generate-ast.ts && node ./scripts/generate-ast.js .",
+    "ast:generate": "tsc ./scripts/generate-ast.ts && node ./scripts/generate-ast.js ./src",
     "console": "npm run build && node",
-    "clean": "rm *.js ./scripts/*.js"
+    "clean": "rm -f ./src/*.js ./scripts/*.js"
   },
   "author": "Josh Holbrook",
   "license": "ISC",

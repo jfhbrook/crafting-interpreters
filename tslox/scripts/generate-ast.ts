@@ -18,7 +18,7 @@ function readTypes(
   baseName: string
 ): string[] {
   return readFileSync(
-    path.join(outputDir, `${baseName.toLowerCase()}.txt`), "utf8"
+    path.join(outputDir, `${baseName.toLowerCase()}.xp`), "utf8"
   ).trim().split('\n');
 }
 
