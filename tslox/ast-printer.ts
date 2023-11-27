@@ -28,5 +28,3 @@ export class AstPrinter implements ExprVisitor<string> {
     }).join(' ') + ')';
   }
 }
-
-

@@ -8,7 +8,8 @@
     "start": "npm run build && node ./index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "ast:generate": "tsc ./scripts/generate-ast.ts && node ./scripts/generate-ast.js .",
-    "console": "npm run build && node"
+    "console": "npm run build && node",
+    "clean": "rm *.js ./scripts/*.js"
   },
   "author": "Josh Holbrook",
   "license": "ISC",
