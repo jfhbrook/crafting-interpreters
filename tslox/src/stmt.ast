@@ -1,2 +1,4 @@
+import { Expr } from './expr'
+
 Expression :: expression: Expr
 Print      :: expression: Expr

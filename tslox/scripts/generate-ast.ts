@@ -8,32 +8,54 @@ function main(): void {
     process.exit(64);
   }
   const outputDir: string = args[0];
-  const baseName: string = "Expr";
   defineAst(outputDir, "Expr");
   defineAst(outputDir, "Stmt");
 }
 
-function readTypes(
+interface Spec {
+  imports: string[];
+  types: string[]
+}
+
+function readSpec(
   outputDir: string,
   baseName: string
-): string[] {
-  return readFileSync(
+): Spec {
+  const spec: Spec = {
+    imports: [],
+    types: []
+  };
+
+  const lines = readFileSync(
     path.join(outputDir, `${baseName.toLowerCase()}.ast`), "utf8"
-  ).trim().split('\n');
+  ).trim().split('\n').map(l => l.trim()).filter(l => l.length);
+
+  for (let line of lines) {
+    if (line.startsWith('import')) {
+      spec.imports.push(line);
+    } else {
+      spec.types.push(line);
+    }
+  }
+
+  return spec;
 }
 
 function defineAst(
   outputDir: string,
   baseName: string
 ): void {
-  const types = readTypes(outputDir, baseName);
+  const { imports, types } = readSpec(outputDir, baseName);
   const path_ = path.join(outputDir, `${baseName.toLowerCase()}.ts`);
   const writeStream = createWriteStream(path_, "utf8");
 
-  writeStream.write(`import { Token } from './token';
-import { Value } from './value';
+  if (imports.length) {
+    for (let imp of imports) {
+      writeStream.write(`${imp}\n`);
+    }
 
-`);
+    writeStream.write('\n');
+  }
 
   defineVisitor(writeStream, baseName, types);
 

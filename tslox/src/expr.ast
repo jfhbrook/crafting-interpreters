@@ -1,3 +1,6 @@
+import { Token } from './token';
+import { Value } from './value';
+
 Binary   :: left: Expr, operator: Token, right: Expr
 Grouping :: expression: Expr
 Literal  :: value: Value
