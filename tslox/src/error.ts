@@ -13,8 +13,15 @@
 
 import { Token, TokenType } from './token';
 
+export class RuntimeError extends Error {
+  constructor(public readonly token: Token, message: string) {
+    super(message);
+  }
+}
+
 export const errors = {
   hadError: false,
+  hadRuntimeError: false,
 
   error(where: Token | number, message: string): void {
     if (typeof where === 'number') {
@@ -26,6 +33,12 @@ export const errors = {
         this.report(where.line, `at '${where.lexeme}'`, message);
       }
     }
+  },
+
+  runtimeError(err: RuntimeError): void {
+    console.error(`${err.message}
+[line ${err.token.line}]`);
+    this.hadRuntimeError = true;
   },
 
   // "...the honest truth is that [implementing good error reporting like miette is]

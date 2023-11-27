@@ -39,7 +39,7 @@ import { Value } from './value';
 
 
   writeStream.write(`export abstract class ${baseName} {
-  abstract accept<R>(visitor: ${baseName}Visitor<R>): R;
+  abstract accept<R>(visitor: Visitor<R>): R;
 }
 
 `);
@@ -60,7 +60,7 @@ function defineVisitor(
   baseName: string,
   types: string[]
 ): void {
-  writeStream.write(`export interface ${baseName}Visitor<R> {
+  writeStream.write(`export interface Visitor<R> {
 `);
   let typeName: string = '';
   for (let type of types) {
@@ -95,7 +95,7 @@ function defineType(
     super();
   }
 
-  accept<R>(visitor: ${baseName}Visitor<R>): R {
+  accept<R>(visitor: Visitor<R>): R {
     return visitor.visit${className}${baseName}(this);
   }
 }

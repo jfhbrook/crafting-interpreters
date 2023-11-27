@@ -2,15 +2,14 @@ import { readFile } from 'fs/promises';
 
 import { read } from 'read';
 
-import { AstPrinter } from './ast-printer';
+import { AstPrinter } from './printer';
 import { Token } from './token';
 import { Scanner } from './scanner';
 import { Parser } from './parser';
+import { Interpreter } from './interpreter';
 import { errors } from './error';
 
-// the java lox interpreter stores interpreter state in a big fat Lox
-// class. I decided not to use a class in typescript, so these are all
-// sitting at the module scope.
+const interpreter = new Interpreter();
 
 // there is probably a way to leverage exceptions for this, but let's see
 // where things go.
@@ -43,6 +42,10 @@ async function runFile(file: string): Promise<void> {
   if (errors.hadError) {
     process.exit(65);
   }
+
+  if (errors.hadRuntimeError) {
+    process.exit(70);
+  }
 }
 
 async function runPrompt(): Promise<void> {
@@ -55,6 +58,7 @@ async function runPrompt(): Promise<void> {
       await run(line);
 
       errors.hadError = false;
+      errors.hadRuntimeError = false;
     } catch (err) {
       console.error(err);
       break;
@@ -82,9 +86,15 @@ async function run(source: string): Promise<void> {
 
   if (errors.hadError) return;
 
-  const printer = new AstPrinter();
+  if (process.env.DEBUG) {
+    const printer = new AstPrinter();
 
-  console.log(printer.print(expression));
+    console.log(printer.print(expression));
+  }
+
+  if (expression) {
+    interpreter.interpret(expression);
+  }
 }
 
 
