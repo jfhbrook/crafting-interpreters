@@ -2,8 +2,10 @@ import { readFile } from 'fs/promises';
 
 import { read } from 'read';
 
+import { AstPrinter } from './ast-printer';
 import { Token } from './token';
 import { Scanner } from './scanner';
+import { Parser } from './parser';
 import { errors } from './error';
 
 // the java lox interpreter stores interpreter state in a big fat Lox
@@ -73,7 +75,16 @@ async function run(source: string): Promise<void> {
   //
   // then I can interactively test if the scanner is working the way I think
   // it should.
-  console.log(tokens);
+  // console.log(tokens);
+
+  const parser = new Parser(tokens);
+  const expression = parser.parse();
+
+  if (errors.hadError) return;
+
+  const printer = new AstPrinter();
+
+  console.log(printer.print(expression));
 }
 
 

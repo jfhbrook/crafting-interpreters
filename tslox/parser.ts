@@ -2,11 +2,34 @@ import { Token, TokenType } from './token';
 import * as expr from './expr';
 import { errors } from './error';
 
+class ParseError extends Error {
+  constructor() { super('ParseError'); }
+}
+
+// I'm 100% doing poor man's tracing here. I might oughta use the actual
+// tracing create in my rusty BASIC for this kind of debug reporting.
+function debug(...args: any): void {
+  if (process.env.DEBUG) {
+    console.error(...args);
+  }
+}
+
 export class Parser {
   private current: number;
 
   constructor(private readonly tokens: Token[]) {
     this.current = 0;
+  }
+
+  public parse(): expr.Expr | null {
+    try {
+      return this.expression();
+    } catch (err) {
+      if (err instanceof ParseError) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   private match(...types: TokenType[]): boolean {
@@ -26,7 +49,10 @@ export class Parser {
   }
 
   private advance(): Token {
-    if (!this.isAtEnd) this.current++;
+    if (!this.isAtEnd()) {
+      this.current++;
+      debug(`advance to ${this.current} (${this.peek()})`)
+    }
     return this.previous();
   }
 
@@ -42,94 +68,121 @@ export class Parser {
     return this.tokens[this.current - 1];
   }
 
+  private consume(type: TokenType, message: string): Token {
+    if (this.check(type)) return this.advance();
+
+    throw this.parseError(this.peek(), message);
+  }
+
+  private parseError(token: Token, message: string) {
+    errors.error(token, message);
+    return new ParseError();
+  }
+
+  // When we hit a parse error, "[w]e want to discard tokens until we're right
+  // at the beginning of the next statement" so that the parser can keep
+  // going. This is so we can do a best effort at parsing instead of
+  // crashing.
+  //
+  // In the case of my BASIC, I probably want "synchronize" functions which
+  // drop tokens for exprs, instructions and commands respectively. I can
+  // then call these in the code which collects VerboseErrors and reifies
+  // them into Exceptions.
+  private synchronize() {
+    this.advance();
+
+    while (!this.isAtEnd()) {
+      if (this.previous().type === TokenType.Semicolon) return;
+
+      switch (this.peek().type) {
+        case TokenType.Class:
+        case TokenType.Fun:
+        case TokenType.Var:
+        case TokenType.For:
+        case TokenType.If:
+        case TokenType.While:
+        case TokenType.Print:
+        case TokenType.Return:
+          return;
+      }
+
+      this.advance();
+    }
+  }
+
   private expression(): expr.Expr {
+    debug('expression()');
     return this.equality();
   }
 
-  private equality(): expr.Expr {
-    let ex = this.comparison();
+  private binaryOperator(
+    types: TokenType[],
+    operand: () => expr.Expr,
+  ): expr.Expr {
+    debug(`binaryOperator(${types}, ${operand})`);
+    const start: Token = this.peek();
+    let ex: expr.Expr = operand();
 
-    let operator: Token | null = null;
+    debug(`  start: ${start}`);
+    // debug(`  ex: ${ex}`);
+
+    let op: Token | null = null;
     let right: expr.Expr | null = null;
-    while (this.match(TokenType.BangEqual, TokenType.EqualEqual)) {
-      operator = this.previous();
-      right = this.comparison();
 
-      if (operator === null || right === null) {
-        throw new Error('operator and right must not be null');
+    while (this.match(...types)) {
+      op = this.previous();
+      debug(`  match op: ${op}`);
+      right = operand();
+      debug(`  right: ${right}`);
+
+      if (op === null || right === null) {
+        throw this.parseError(start, "Expect expression.");
       }
 
-      ex = new expr.Binary(ex, operator, right);
+      ex = new expr.Binary(ex, op, right);
     }
 
     return ex;
   }
 
-  private comparision(): expr.Expr {
-    let ex: expr.Expr = this.term();
+  private equality(): expr.Expr {
+    return this.binaryOperator(
+      [TokenType.BangEqual, TokenType.EqualEqual],
+      this.comparison.bind(this)
+    );
+  }
 
-    let operator: Token | null = null;
-    let right: expr.Expr | null = null;
-
-    while (this.match(TokenType.Greater, TokenType.GreaterEqual, TokenType.Less, TokenType.LessEqual)) {
-      operator = this.previous();
-      right = this.term();
-
-      if (operator === null || right === null) {
-        throw new Error('operator and right must not be null');
-      }
-
-      ex = new expr.Binary(ex, operator, right);
-    }
-
-    return ex;
+  private comparison(): expr.Expr {
+    return this.binaryOperator(
+      [TokenType.Greater, TokenType.GreaterEqual, TokenType.Less, TokenType.LessEqual],
+      this.term.bind(this)
+    );
   }
 
   private term(): expr.Expr {
-    let ex: expr.Expr = this.factor();
-
-    let operator: Token | null = null;
-    let right: expr.Expr | null = null;
-
-    while (this.match(TokenType.Minus, TokenType.Plus)) {
-      operator = this.previous();
-      right = this.factor();
-
-      if (operator === null || right === null) {
-        throw new Error('operator and right must not be null');
-      }
-
-      ex = new expr.Binary(ex, operator, right);
-    }
-
-    return ex;
+    return this.binaryOperator(
+      [TokenType.Minus, TokenType.Plus],
+      this.factor.bind(this)
+    );
   }
 
   private factor(): expr.Expr {
-    let ex: expr.Expr = this.unary();
-
-    let operator: Token | null = null;
-    let right: expr.Expr | null = null;
-
-    while (this.match(TokenType.Slash, TokenType.Star)) {
-      operator = this.previous();
-      right = this.unary();
-
-      if (operator === null || right === null) {
-        throw new Error('operator and right must not be null');
-      }
-
-      ex = new expr.Binary(ex, operator, right);
-    }
-
-    return ex;
+    return this.binaryOperator(
+      [TokenType.Slash, TokenType.Star],
+      this.unary.bind(this)
+    );
   }
 
   private unary(): expr.Expr {
+    debug('unary()');
     if (this.match(TokenType.Bang, TokenType.Minus)) {
-      const operator = this.previous();
+      const op = this.previous();
       const right = this.unary();
-      return new expr.Unary(operator, right);
+
+      debug(`  match op: ${op}`);
+      // debug(`  right: ${right}`);
+
+      return new expr.Unary(op, right);
     }
 
     return this.primary();
@@ -150,17 +203,6 @@ export class Parser {
       return new expr.Grouping(ex);
     }
 
-    throw new Error(`unexpected token: ${this.peek()}`);
-  }
-
-  private consume(type: TokenType, message: string): Token {
-    if (this.check(type)) return this.advance();
-
-    throw this.error(this.peek(), message);
-  }
-
-  private error(token: Token, message: string) {
-    errors.error(token, message);
-    return new Error('ParseError');
+    throw this.parseError(this.peek(), "Expect expression.");
   }
 }

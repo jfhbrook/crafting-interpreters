@@ -1,7 +1,12 @@
+import { format } from 'util';
 import { ExprVisitor, Expr, Binary, Grouping, Literal, Unary } from './expr';
 
 export class AstPrinter implements ExprVisitor<string> {
-  print(expr: Expr): string {
+  print(expr: Expr | null): string {
+    if (!expr) {
+      return '';
+    }
+    // if (process.env.DEBUG) return format(expr);
     return expr.accept(this);
   }
 

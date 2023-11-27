@@ -11,10 +11,21 @@
 // in my BASIC, the ErrorReporter functionality will probably be handled by
 // the Host.
 
+import { Token, TokenType } from './token';
+
 export const errors = {
   hadError: false,
-  error(line: number, message: string): void {
-    this.report(line, '', message);
+
+  error(where: Token | number, message: string): void {
+    if (typeof where === 'number') {
+      this.report(where, '', message);
+    } else {
+      if (where.type === TokenType.Eof) {
+        this.report(where.line, 'at end', message);
+      } else {
+        this.report(where.line, `at '${where.lexeme}'`, message);
+      }
+    }
   },
 
   // "...the honest truth is that [implementing good error reporting like miette is]
