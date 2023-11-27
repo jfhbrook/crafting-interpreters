@@ -1,0 +1,4 @@
+Binary   :: left: Expr, operator: Token, right: Expr
+Grouping :: expression: Expr
+Literal  :: value: any
+Unary    :: operator: Token, right: Expr

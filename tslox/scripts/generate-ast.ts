@@ -1,26 +1,32 @@
 import * as path from 'path';
-import { createWriteStream, WriteStream } from 'fs';
+import { readFileSync, createWriteStream, WriteStream } from 'fs';
 
-async function main(): Promise<void> {
+function main(): void {
   const args = process.argv.slice(2);
   if (args.length != 1) {
     console.error("Usage: generate_ast <output_directory>");
     process.exit(64);
   }
   const outputDir: string = args[0];
-  await defineAst(outputDir, "Expr", [
-    "Binary   :: left: Expr, operator: Token, right: Expr",
-    "Grouping :: expression: Expr",
-    "Literal  :: value: any",
-    "Unary    :: operator: Token, right: Expr"
-  ]);
+  const baseName: string = "Expr";
+  const types: string[] = readTypes(outputDir, baseName);
+  defineAst(outputDir, baseName, types);
 }
 
-async function defineAst(
+function readTypes(
+  outputDir: string,
+  baseName: string
+): string[] {
+  return readFileSync(
+    path.join(outputDir, `${baseName.toLowerCase()}.txt`), "utf8"
+  ).trim().split('\n');
+}
+
+function defineAst(
   outputDir: string,
   baseName: string,
   types: string[]
-): Promise<void> {
+): void {
   const path_ = path.join(outputDir, `${baseName.toLowerCase()}.ts`);
   const writeStream = createWriteStream(path_, "utf8");
 
@@ -46,7 +52,7 @@ function defineType(
   baseName: string,
   className: string,
   fieldList: string
-) {
+): void {
   writeStream.write(`export class ${className} extends ${baseName} {
   constructor(
 `);
