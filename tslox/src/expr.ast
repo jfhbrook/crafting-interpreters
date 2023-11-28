@@ -1,6 +1,7 @@
 import { Token } from './token'
 import { Value } from './value'
 
+Assign   :: name: Token, value: Expr
 Binary   :: left: Expr, operator: Token, right: Expr
 Grouping :: expression: Expr
 Literal  :: value: Value
