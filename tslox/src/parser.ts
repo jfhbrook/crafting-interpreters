@@ -1,11 +1,7 @@
 import { Token, TokenType } from './token';
 import * as expr from './expr';
 import * as stmt from './stmt';
-import { errors } from './error';
-
-class ParseError extends Error {
-  constructor() { super('ParseError'); }
-}
+import { errors, ParseError } from './error';
 
 // I'm 100% doing poor man's tracing here. I might oughta use the actual
 // tracing create in my rusty BASIC for this kind of debug reporting.
@@ -118,7 +114,7 @@ export class Parser {
 
       return this.statement();
     } catch (err) {
-      if (err instanceof ParseError) {
+      if (ParseError.isParseError(err)) {
         // THERE we go lol
         this.synchronize();
         return null;

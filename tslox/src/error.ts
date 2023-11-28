@@ -13,12 +13,24 @@
 
 import { Token, TokenType } from './token';
 
-export class RuntimeError extends Error {
-  code: string = 'RuntimeError';
+export class ParseError extends Error {
+  code: string = 'ParseError';
 
   // instanceof checks don't work for errors, since super() transpiles to
   // Error.call, which throws a type Error in node.js. So we use an error
   // code instead.
+  static isParseError(err: any): err is ParseError {
+    return err.code === 'ParseError' && err instanceof Error;
+  }
+
+  constructor() { super('ParseError'); }
+}
+
+
+
+export class RuntimeError extends Error {
+  code: string = 'RuntimeError';
+
   static isRuntimeError(err: any): err is RuntimeError {
     return err.code === 'RuntimeError' && err instanceof Error;
   }

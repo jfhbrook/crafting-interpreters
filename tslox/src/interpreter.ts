@@ -37,8 +37,8 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   public flags: Flags = { repl: false };
   private environment: Environment;
 
-  private executedExprStmtValue: Value | undefined = undefined;
-  private lastExecutedExprStmtValue: Value | undefined = undefined;
+  // private executedExprStmtValue: Value | undefined = undefined;
+  // private lastExecutedExprStmtValue: Value | undefined = undefined;
 
   constructor() {
     this.environment = new Environment();
@@ -48,12 +48,13 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     try {
       for (let {i, statement} of enumerateStatements(statements)) {
         this.execute(statement);
-
+        /*
         if (i == statements.length - 1) {
           this.saveExecutedExprStmtValue();
         }
 
         this.clearExecutedExprStmtValue();
+        */
       }
     } catch (err) {
       if (RuntimeError.isRuntimeError(err)) {
@@ -63,14 +64,17 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       }
     }
 
-    this.printExecutedExprStmtValue();
+    // this.printExecutedExprStmtValue();
   }
 
   // This logic is meant to print the last statement, *if* it was an
   // expression statement *and* repl mode is activated. It's a bit obnoxious
   // to implement but really helps with the usability of the repl.
+  // UNFORTUNATELY this is really hard to do properly, and the implementation
+  // became buggy after adding assignments.
   //
   // I'll almost certainly want to implement this in my BASIC.
+  /*
   private registerExecutedExprStmtValue(value: Value): void {
     if (this.flags.repl) {
       this.executedExprStmtValue = value;
@@ -92,6 +96,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       console.log(this.stringify(this.lastExecutedExprStmtValue));
     }
   }
+  */
 
   private stringify(value: Value): string {
     if (value === null) return 'nil';
@@ -129,7 +134,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   visitExpressionStmt(stmt: stmt.Expression): void {
     const value = this.evaluate(stmt.expression);
 
-    this.registerExecutedExprStmtValue(value);
+    // this.registerExecutedExprStmtValue(value);
   }
 
   visitPrintStmt(stmt: stmt.Print): void {
