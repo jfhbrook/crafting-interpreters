@@ -11,9 +11,6 @@ import { errors } from './error';
 
 const interpreter = new Interpreter();
 
-// there is probably a way to leverage exceptions for this, but let's see
-// where things go.
-
 // my BASIC interpreter has two entry points too, which I call "headless"
 // and "interactive". These basically take the position of my `Editor`
 // abstraction.
@@ -48,21 +45,29 @@ async function runFile(file: string): Promise<void> {
   }
 }
 
+async function readLine(): Promise<string | null> {
+  let line = await read({ prompt: '> ' });
+
+  line.trim();
+
+  // This is a little bit of a hack - I could also see doing this 
+  if (line.length && line[line.length - 1] !== ';') {
+    line += ';';
+  }
+
+  return line.length ? line : null;
+
+}
+
 async function runPrompt(): Promise<void> {
-  interpreter.options = { repl: true };
-  let line: string = '';
+  interpreter.flags.repl = true;
+  let line: string | null = null;
 
   while (true) {
     try {
-      line = await read({ prompt: '> ' });
+      line = await readLine();
 
-      line.trim();
-
-      if (line.length && line[line.length - 1] !== ';') {
-        line += ';';
-      }
-
-      if (line.length) {
+      if (line) {
         await run(line);
 
         errors.hadError = false;

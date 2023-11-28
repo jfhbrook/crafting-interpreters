@@ -21,14 +21,16 @@ function withNumberOperands(
   throw new RuntimeError(operator, "Operands must be numbers.");
 }
 
-export interface InterpreterOptions {
+// This is similar to my concept of Flags...
+export interface Flags {
   repl: boolean;
 }
 
 export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
-  public options: InterpreterOptions = { repl: false };
+  public flags: Flags = { repl: false };
+  private lastValue: Value | undefined = undefined;
 
-  public interpret(statements: stmt.Stmt[], options?: InterpreterOptions): void {
+  public interpret(statements: stmt.Stmt[]): void {
     try {
       for (let statement of statements) {
         this.execute(statement);
@@ -38,6 +40,18 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
         errors.runtimeError(err);
       }
       throw err;
+    }
+
+    // This behavior is a little broken, since it will print the last expression
+    // statement even if it's not the last statement in *general*. This is
+    // challenging to handle correctly because this.execute doesn't return
+    // the value.
+    //
+    // That said, I do like having this behavior in the interpreter and
+    // controlled with a flag over trying to handle that behavior in the
+    // editor.
+    if (this.flags.repl && typeof this.lastValue !== 'undefined') {
+      console.log(this.stringify(this.lastValue));
     }
   }
 
@@ -76,8 +90,9 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   visitExpressionStmt(stmt: stmt.Expression): void {
     const value = this.evaluate(stmt.expression);
-    if (this.options.repl) {
-      console.log(this.stringify(value));
+
+    if (this.flags.repl) {
+      this.lastValue = value;
     }
   }
 
