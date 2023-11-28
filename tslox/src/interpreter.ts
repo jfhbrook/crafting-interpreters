@@ -28,12 +28,22 @@ export interface Flags {
 
 export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   public flags: Flags = { repl: false };
-  private lastValue: Value | undefined = undefined;
+  private executedExprStmtValue: Value | undefined = undefined;
+  private lastExecutedExprStmtValue: Value | undefined = undefined;
 
   public interpret(statements: stmt.Stmt[]): void {
     try {
-      for (let statement of statements) {
+      let statement: stmt.Stmt = null as unknown as stmt.Stmt;
+      for (let i = 0; i < statements.length; i++) {
+        statement = statements[i];
+
         this.execute(statement);
+
+        if (i == statements.length - 1) {
+          this.saveExecutedExprStmtValue();
+        }
+
+        this.clearExecutedExprStmtValue();
       }
     } catch (err) {
       if (err instanceof RuntimeError) {
@@ -42,16 +52,33 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       throw err;
     }
 
-    // This behavior is a little broken, since it will print the last expression
-    // statement even if it's not the last statement in *general*. This is
-    // challenging to handle correctly because this.execute doesn't return
-    // the value.
-    //
-    // That said, I do like having this behavior in the interpreter and
-    // controlled with a flag over trying to handle that behavior in the
-    // editor.
-    if (this.flags.repl && typeof this.lastValue !== 'undefined') {
-      console.log(this.stringify(this.lastValue));
+    this.printExecutedExprStmtValue();
+  }
+
+  // This logic is meant to print the last statement, *if* it was an
+  // expression statement *and* repl mode is activated. It's a bit obnoxious
+  // to implement but really helps with the usability of the repl.
+  //
+  // I'll almost certainly want to implement this in my BASIC.
+  private registerExecutedExprStmtValue(value: Value): void {
+    if (this.flags.repl) {
+      this.executedExprStmtValue = value;
+    }
+  }
+
+  private saveExecutedExprStmtValue(): void {
+    if (typeof this.executedExprStmtValue !== 'undefined') {
+      this.lastExecutedExprStmtValue = this.executedExprStmtValue;
+    }
+  }
+
+  private clearExecutedExprStmtValue(): void {
+    this.executedExprStmtValue = undefined;
+  }
+
+  private printExecutedExprStmtValue(): void {
+    if (this.flags.repl && typeof this.lastExecutedExprStmtValue !== 'undefined') {
+      console.log(this.stringify(this.lastExecutedExprStmtValue));
     }
   }
 
@@ -91,9 +118,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   visitExpressionStmt(stmt: stmt.Expression): void {
     const value = this.evaluate(stmt.expression);
 
-    if (this.flags.repl) {
-      this.lastValue = value;
-    }
+    this.registerExecutedExprStmtValue(value);
   }
 
   visitPrintStmt(stmt: stmt.Print): void {
