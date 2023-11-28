@@ -26,6 +26,12 @@ export interface Flags {
   repl: boolean;
 }
 
+function enumerateStatements(statements: stmt.Stmt[]) {
+  return statements.map((statement, i) => {
+    return {i, statement};
+  });
+}
+
 export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   public flags: Flags = { repl: false };
   private executedExprStmtValue: Value | undefined = undefined;
@@ -33,10 +39,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   public interpret(statements: stmt.Stmt[]): void {
     try {
-      let statement: stmt.Stmt = null as unknown as stmt.Stmt;
-      for (let i = 0; i < statements.length; i++) {
-        statement = statements[i];
-
+      for (let {i, statement} of enumerateStatements(statements)) {
         this.execute(statement);
 
         if (i == statements.length - 1) {
