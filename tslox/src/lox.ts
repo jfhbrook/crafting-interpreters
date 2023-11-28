@@ -56,7 +56,6 @@ async function readLine(): Promise<string | null> {
   }
 
   return line.length ? line : null;
-
 }
 
 async function runPrompt(): Promise<void> {

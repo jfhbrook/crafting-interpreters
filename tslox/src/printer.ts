@@ -1,3 +1,4 @@
+import { Token } from './token';
 import * as expr from './expr';
 import * as stmt from './stmt';
 
@@ -22,6 +23,13 @@ export class AstPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
     return this.parenthesize("print", stmt.expression);
   }
 
+  visitVarStmt(stmt: stmt.Var): string {
+    if (stmt.initializer === null) {
+      return this.parenthesize("var", stmt.name);
+    }
+    return this.parenthesize("var", stmt.name, stmt.initializer);
+  }
+
   visitBinaryExpr(expr: expr.Binary): string {
     return this.parenthesize(expr.operator.lexeme, expr.left, expr.right);
   }
@@ -39,8 +47,18 @@ export class AstPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
     return this.parenthesize(expr.operator.lexeme, expr.right);
   }
 
-  parenthesize(name: string, ...exprs: expr.Expr[]) {
+  visitVariableExpr(expr: expr.Variable): string {
+    return this.parenthesize('variable', expr.name);
+  }
+
+  parenthesize(name: string, ...exprs: Array<expr.Expr | Token | string>) {
     return `(${name} ` + exprs.map((expr) => {
+      if (typeof expr === 'string') {
+        return expr;
+      }
+      if (expr instanceof Token) {
+        return expr.lexeme;
+      }
       return expr.accept(this)
     }).join(' ') + ')';
   }

@@ -51,7 +51,7 @@ function defineAst(
 
   if (imports.length) {
     for (let imp of imports) {
-      writeStream.write(`${imp}\n`);
+      writeStream.write(`${imp};\n`);
     }
 
     writeStream.write('\n');

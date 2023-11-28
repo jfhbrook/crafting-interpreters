@@ -1,7 +1,8 @@
-import { Token } from './token';
-import { Value } from './value';
+import { Token } from './token'
+import { Value } from './value'
 
 Binary   :: left: Expr, operator: Token, right: Expr
 Grouping :: expression: Expr
 Literal  :: value: Value
 Unary    :: operator: Token, right: Expr
+Variable :: name: Token

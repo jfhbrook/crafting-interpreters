@@ -2,6 +2,7 @@ import * as expr from './expr';
 import * as stmt from './stmt';
 import { Token, TokenType } from './token';
 import { Value } from './value';
+import { Environment } from './environment';
 import { errors, RuntimeError } from './error';
 
 function checkNumberOperand(operator: Token, operand: Value): operand is number {
@@ -36,6 +37,11 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   public flags: Flags = { repl: false };
   private executedExprStmtValue: Value | undefined = undefined;
   private lastExecutedExprStmtValue: Value | undefined = undefined;
+  private environment: Environment;
+
+  constructor() {
+    this.environment = new Environment();
+  }
 
   public interpret(statements: stmt.Stmt[]): void {
     try {
@@ -49,10 +55,11 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
         this.clearExecutedExprStmtValue();
       }
     } catch (err) {
-      if (err instanceof RuntimeError) {
-        errors.runtimeError(err);
+      if (RuntimeError.isRuntimeError(err)) {
+        errors.runtimeError(err as RuntimeError);
+      } else {
+        throw err;
       }
-      throw err;
     }
 
     this.printExecutedExprStmtValue();
@@ -129,6 +136,18 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     console.log(this.stringify(value));
   }
 
+  visitVarStmt(stmt: stmt.Var): void {
+    if (this.environment.has(stmt.name)) {
+      throw new RuntimeError(stmt.name, "May not define a variable more than once.");
+    }
+    let value: Value = null;
+    if (stmt.initializer != null) {
+      value = this.evaluate(stmt.initializer);
+    }
+
+    this.environment.define(stmt.name.lexeme, value);
+  }
+
   visitBinaryExpr(ex: expr.Binary): Value {
     const left: Value = this.evaluate(ex.left);
     const right: Value = this.evaluate(ex.right);
@@ -183,5 +202,9 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     }
 
     return null;
+  }
+
+  visitVariableExpr(ex: expr.Variable): Value {
+    return this.environment.get(ex.name);
   }
 }

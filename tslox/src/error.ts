@@ -14,6 +14,15 @@
 import { Token, TokenType } from './token';
 
 export class RuntimeError extends Error {
+  code: string = 'RuntimeError';
+
+  // instanceof checks don't work for errors, since super() transpiles to
+  // Error.call, which throws a type Error in node.js. So we use an error
+  // code instead.
+  static isRuntimeError(err: any): err is RuntimeError {
+    return err.code === 'RuntimeError' && err instanceof Error;
+  }
+
   constructor(public readonly token: Token, message: string) {
     super(message);
   }
