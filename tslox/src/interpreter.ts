@@ -35,9 +35,10 @@ function enumerateStatements(statements: stmt.Stmt[]) {
 
 export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   public flags: Flags = { repl: false };
+  private environment: Environment;
+
   private executedExprStmtValue: Value | undefined = undefined;
   private lastExecutedExprStmtValue: Value | undefined = undefined;
-  private environment: Environment;
 
   constructor() {
     this.environment = new Environment();
