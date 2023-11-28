@@ -25,7 +25,10 @@ export class Parser {
   public parse(): stmt.Stmt[] {
     const statements: stmt.Stmt[] = [];
     while (!this.isAtEnd()) {
-      statements.push(this.declaration());
+      let statement = this.declaration();
+      if (statement) {
+        statements.push(statement);
+      }
     }
 
     return statements;
@@ -154,29 +157,52 @@ export class Parser {
   }
 
   private expression(): expr.Expr {
-    debug('expression()');
-    return this.equality();
+    return this.assignment();
+  }
+
+  private assignment(): expr.Expr {
+    const ex = this.equality();
+
+    if (this.match(TokenType.Equal)) {
+      const equals = this.previous();
+      // assignment is right-associative, so instead of folding like with
+      // "binary operator" we recursively parse the right hand side
+      const value = this.assignment();
+
+      // "the trick is that right before we create the assignment expression
+      // node, we look at the left-hand side exoression and figure out what
+      // kind of assignment target it is. We convert the r-value expression
+      // node into an l-value representation.
+      if (ex instanceof expr.Variable) {
+        // "This means we can parse the left-hand side *as if it were an
+        // expression* and then after the fact produce a syntax tree that
+        // turns it into an assignment target.
+        const name = ex.name;
+        return new expr.Assign(name, value);
+      }
+
+      errors.error(equals, "Invalid assignment type.");
+    }
+
+    // note, if the next token *isn't* an assignment operator, then we just
+    // return the expression as though we didn't do this whole assignment thing
+    // at all.
+    return ex;
   }
 
   private binaryOperator(
     types: TokenType[],
     operand: () => expr.Expr,
   ): expr.Expr {
-    debug(`binaryOperator(${types}, ${operand})`);
     const start: Token = this.peek();
     let ex: expr.Expr = operand();
-
-    debug(`  start: ${start}`);
-    // debug(`  ex: ${ex}`);
 
     let op: Token | null = null;
     let right: expr.Expr | null = null;
 
     while (this.match(...types)) {
       op = this.previous();
-      debug(`  match op: ${op}`);
       right = operand();
-      debug(`  right: ${right}`);
 
       if (op === null || right === null) {
         throw this.parseError(start, "Expect expression.");

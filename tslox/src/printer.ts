@@ -30,25 +30,29 @@ export class AstPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
     return this.parenthesize("var", stmt.name, stmt.initializer);
   }
 
-  visitBinaryExpr(expr: expr.Binary): string {
-    return this.parenthesize(expr.operator.lexeme, expr.left, expr.right);
+  visitBinaryExpr(ex: expr.Binary): string {
+    return this.parenthesize(ex.operator.lexeme, ex.left, ex.right);
   }
 
-  visitGroupingExpr(expr: expr.Grouping): string {
-    return this.parenthesize("group", expr.expression);
+  visitGroupingExpr(ex: expr.Grouping): string {
+    return this.parenthesize("group", ex.expression);
   }
 
-  visitLiteralExpr(expr: expr.Literal): string {
-    if (expr.value === null) return 'nil';
-    return String(expr.value);
+  visitLiteralExpr(ex: expr.Literal): string {
+    if (ex.value === null) return 'nil';
+    return String(ex.value);
   }
 
-  visitUnaryExpr(expr: expr.Unary): string {
-    return this.parenthesize(expr.operator.lexeme, expr.right);
+  visitUnaryExpr(ex: expr.Unary): string {
+    return this.parenthesize(ex.operator.lexeme, ex.right);
   }
 
-  visitVariableExpr(expr: expr.Variable): string {
-    return this.parenthesize('variable', expr.name);
+  visitVariableExpr(ex: expr.Variable): string {
+    return this.parenthesize('variable', ex.name);
+  }
+
+  visitAssignExpr(ex: expr.Assign): string {
+    return this.parenthesize('assign', ex.name, ex.value);
   }
 
   parenthesize(name: string, ...exprs: Array<expr.Expr | Token | string>) {

@@ -25,4 +25,13 @@ export class Environment {
   has(name: Token): boolean {
     return typeof this.values[name.lexeme]  !== 'undefined';
   }
+
+  assign(name: Token, value: Value): void {
+    if (this.has(name)) {
+      this.values[name.lexeme] = value;
+      return;
+    }
+
+    throw new RuntimeError(name, `Undefined variable '${name.lexeme}'.`);
+  }
 }
