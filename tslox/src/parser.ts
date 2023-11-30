@@ -185,7 +185,7 @@ export class Parser {
   }
 
   private assignment(): expr.Expr {
-    const ex = this.equality();
+    const ex = this.or();
 
     if (this.match(TokenType.Equal)) {
       const equals = this.previous();
@@ -218,24 +218,46 @@ export class Parser {
     types: TokenType[],
     operand: () => expr.Expr,
   ): expr.Expr {
-    const start: Token = this.peek();
     let ex: expr.Expr = operand();
 
-    let op: Token | null = null;
-    let right: expr.Expr | null = null;
-
     while (this.match(...types)) {
-      op = this.previous();
-      right = operand();
-
-      if (op === null || right === null) {
-        throw this.parseError(start, "Expect expression.");
-      }
+      const op = this.previous();
+      const right = operand();
 
       ex = new expr.Binary(ex, op, right);
     }
 
     return ex;
+  }
+
+  private logicalOperator(
+    types: TokenType[],
+    operand: () => expr.Expr,
+  ): expr.Expr {
+    let ex: expr.Expr = operand();
+
+    while (this.match(...types)) {
+      const op = this.previous();
+      const right = operand();
+
+      ex = new expr.Logical(ex, op, right);
+    }
+
+    return ex;
+  }
+
+  private or() {
+    return this.logicalOperator(
+      [TokenType.Or],
+      this.and.bind(this)
+    );
+  }
+
+  private and() {
+    return this.logicalOperator(
+      [TokenType.And],
+      this.equality.bind(this)
+    );
   }
 
   private equality(): expr.Expr {

@@ -99,6 +99,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   private isTruthy(value: Value) {
     if (value === null) return false;
+    if (value === 0) return false;
     if (typeof value === 'boolean') return value;
     return true;
   }
@@ -110,7 +111,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   }
 
   visitExpressionStmt(st: stmt.Expression): void {
-    const value = this.evaluate(st.expression);
+    this.evaluate(st.expression);
   }
 
   visitIfStmt(st: stmt.If): void {
@@ -142,6 +143,18 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     const value = this.evaluate(ex.value);
     this.environment.assign(ex.name, value);
     return value;
+  }
+
+  visitLogicalExpr(ex: expr.Logical): Value {
+    const left: Value = this.evaluate(ex.left);
+
+    if (ex.operator.type === TokenType.Or) {
+      if (this.isTruthy(left)) return left;
+    } else {
+      if (!this.isTruthy(left)) return left;
+    }
+
+    return this.evaluate(ex.right);
   }
 
   visitBinaryExpr(ex: expr.Binary): Value {
