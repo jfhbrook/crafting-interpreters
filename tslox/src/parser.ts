@@ -136,10 +136,51 @@ export class Parser {
   }
 
   private statement(): stmt.Stmt {
+    if (this.match(TokenType.For)) return this.forStatement();
     if (this.match(TokenType.If)) return this.ifStatement();
     if (this.match(TokenType.Print)) return this.printStatement();
+    if (this.match(TokenType.While)) return this.whileStatement();
     if (this.match(TokenType.LeftBrace)) return new stmt.Block(this.block());
     return this.expressionStatement();
+  }
+
+  // parses into a while statement - that syntactic sugar tho
+  private forStatement(): stmt.Stmt {
+    this.consume(TokenType.LeftParen, "Expect '(' after 'for'.");
+    let initializer: stmt.Stmt | null;
+    if (this.match(TokenType.Semicolon)) {
+      initializer = null;
+    } else if (this.match(TokenType.Var)) {
+      initializer = this.varDeclaration();
+    } else {
+      initializer = this.expressionStatement();
+    }
+
+    let condition: expr.Expr = new expr.Literal(true);
+    if (!this.check(TokenType.Semicolon)) {
+      condition = this.expression();
+    }
+    this.consume(TokenType.Semicolon, "Expect ';' after loop condition.");
+
+    let increment: expr.Expr | null = null;
+    if (!this.check(TokenType.RightParen)) {
+      // console.log(this.peek());
+      increment = this.expression();
+    }
+    this.consume(TokenType.RightParen, "Expect ')' after for clauses.");
+    let body = this.statement();
+
+    if (increment != null) {
+      body = new stmt.Block([body, new stmt.Expression(increment)]);
+    }
+
+    body = new stmt.While(condition, body);
+
+    if (initializer) {
+      body = new stmt.Block([ initializer, body ]);
+    }
+
+    return body;
   }
 
   private ifStatement(): stmt.Stmt {
@@ -160,6 +201,15 @@ export class Parser {
     const ex = this.expression();
     this.consume(TokenType.Semicolon, "Expect ';' after value.");
     return new stmt.Print(ex);
+  }
+
+  private whileStatement(): stmt.Stmt {
+    this.consume(TokenType.LeftParen, "Expect '(' after 'while'.");
+    const condition = this.expression();
+    this.consume(TokenType.RightParen, "Expect ')' after condition.");
+    const body = this.statement();
+
+    return new stmt.While(condition, body);
   }
 
   private block(): stmt.Stmt[] {

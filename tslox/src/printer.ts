@@ -41,6 +41,10 @@ export class AstPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
     return this.parenthesize("if", st.condition, st.thenBranch, st.elseBranch);
   }
 
+  visitWhileStmt(st: stmt.While): string {
+    return this.parenthesize("while", st.condition, st.body);
+  }
+
   visitLogicalExpr(ex: expr.Logical): string {
     return this.parenthesize(ex.operator.lexeme, ex.left, ex.right);
   }

@@ -52,7 +52,7 @@ async function readLine(): Promise<string | null> {
 
   // This is a massive hack - I could also see doing this 
   if (line.length && !';}'.includes(line[line.length - 1])) {
-    line += ';';
+    // line += ';';
   }
 
   return line.length ? line : null;
