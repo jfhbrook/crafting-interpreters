@@ -50,8 +50,8 @@ async function readLine(): Promise<string | null> {
 
   line.trim();
 
-  // This is a little bit of a hack - I could also see doing this 
-  if (line.length && line[line.length - 1] !== ';') {
+  // This is a massive hack - I could also see doing this 
+  if (line.length && !';}'.includes(line[line.length - 1])) {
     line += ';';
   }
 
