@@ -1,8 +1,9 @@
 import * as expr from './expr';
 import * as stmt from './stmt';
 import { Token, TokenType } from './token';
-import { Value } from './value';
+import { Callable, IInterpreter, Value } from './value';
 import { Environment } from './environment';
+import { callable } from './callable';
 import { errors, RuntimeError } from './error';
 
 function checkNumberOperand(operator: Token, operand: Value): operand is number {
@@ -35,10 +36,19 @@ function enumerateStatements(statements: stmt.Stmt[]) {
 
 export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   public flags: Flags = { repl: false };
+  public readonly globals: Environment;
   private environment: Environment;
 
   constructor() {
+    this.globals = new Environment();
     this.environment = new Environment();
+    
+    this.globals.define("clock", {
+      arity() { return 0; },
+      call(interpreter: IInterpreter, args: Value[]) {
+        return Date.now() / 1000;
+      }
+    });
   }
 
   public interpret(statements: stmt.Stmt[]): void {
@@ -196,6 +206,26 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     }
 
     return null;
+  }
+
+  visitCallExpr(ex: expr.Call): Value {
+    const callee: Value = this.evaluate(ex.callee);
+
+    const args = [];
+    for (let arg of ex.args) {
+      args.push(this.evaluate(arg));
+    }
+
+    const fn: Callable | null = callable(callee);
+
+    if (!fn) {
+      throw new RuntimeError(ex.paren, "Can only call functions and classes.");
+    }
+
+    if (args.length !== fn.arity()) {
+      throw new RuntimeError(ex.paren, `Expected ${fn.arity()} arguments but got ${args.length}.`);
+    }
+    return fn.call(this, args);
   }
 
   visitGroupingExpr(ex: expr.Grouping): Value {

@@ -2,7 +2,6 @@ import { readFile } from 'fs/promises';
 
 import { read } from 'read';
 
-import { AstPrinter } from './printer';
 import { Token } from './token';
 import { Scanner } from './scanner';
 import { Parser } from './parser';
@@ -98,12 +97,6 @@ async function run(source: string): Promise<void> {
   const statements = parser.parse();
 
   if (errors.hadError) return;
-
-  if (process.env.DEBUG) {
-    const printer = new AstPrinter();
-
-    console.log(printer.print(statements));
-  }
 
   interpreter.interpret(statements);
 }

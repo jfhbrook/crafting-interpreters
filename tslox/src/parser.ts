@@ -339,18 +339,44 @@ export class Parser {
   }
 
   private unary(): expr.Expr {
-    debug('unary()');
     if (this.match(TokenType.Bang, TokenType.Minus)) {
       const op = this.previous();
       const right = this.unary();
 
-      debug(`  match op: ${op}`);
-      // debug(`  right: ${right}`);
-
       return new expr.Unary(op, right);
     }
 
-    return this.primary();
+    return this.call();
+  }
+
+  private call(): expr.Expr {
+    let ex = this.primary();
+
+    while (true) {
+      if (this.match(TokenType.LeftParen)) {
+        ex = this.finishCall(ex);
+      } else {
+        break;
+      }
+    }
+
+    return ex;
+  }
+
+  private finishCall(callee: expr.Expr) {
+    const args: expr.Expr[] = [];
+    if (!this.check(TokenType.RightParen)) {
+      do {
+        if (args.length >= 255) {
+          errors.error(this.peek(), "Can't have more than 255 arguments.");
+        }
+        args.push(this.expression());
+      } while (this.match(TokenType.Comma));
+    }
+
+    const paren = this.consume(TokenType.RightParen, "Expect ')' after arguments.");
+
+    return new expr.Call(callee, paren, args);
   }
 
   private primary(): expr.Expr {
