@@ -27,11 +27,18 @@ export class AstPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
     return this.parenthesize("block", this.print(st.statements));
   }
 
-  visitVarStmt(stmt: stmt.Var): string {
-    if (stmt.initializer === null) {
-      return this.parenthesize("var", stmt.name);
+  visitVarStmt(st: stmt.Var): string {
+    if (st.initializer === null) {
+      return this.parenthesize("var", st.name);
     }
-    return this.parenthesize("var", stmt.name, stmt.initializer);
+    return this.parenthesize("var", st.name, st.initializer);
+  }
+
+  visitIfStmt(st: stmt.If): string {
+    if (st.elseBranch === null) {
+      return this.parenthesize("if", st.condition, st.thenBranch);
+    }
+    return this.parenthesize("if", st.condition, st.thenBranch, st.elseBranch);
   }
 
   visitBinaryExpr(ex: expr.Binary): string {
@@ -59,7 +66,7 @@ export class AstPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
     return this.parenthesize('assign', ex.name, ex.value);
   }
 
-  parenthesize(name: string, ...exprs: Array<expr.Expr | Token | string>) {
+  parenthesize(name: string, ...exprs: Array<stmt.Stmt | expr.Expr | Token | string>) {
     return `(${name} ` + exprs.map((expr) => {
       if (typeof expr === 'string') {
         return expr;

@@ -136,9 +136,24 @@ export class Parser {
   }
 
   private statement(): stmt.Stmt {
+    if (this.match(TokenType.If)) return this.ifStatement();
     if (this.match(TokenType.Print)) return this.printStatement();
     if (this.match(TokenType.LeftBrace)) return new stmt.Block(this.block());
     return this.expressionStatement();
+  }
+
+  private ifStatement(): stmt.Stmt {
+    this.consume(TokenType.LeftParen, "Expect '(' after 'if'.");
+    const condition = this.expression();
+    this.consume(TokenType.RightParen, "Expect ')' after if condition.");
+
+    const thenBranch = this.statement();
+    let elseBranch: stmt.Stmt | null = null;
+    if (this.match(TokenType.Else)) {
+      elseBranch = this.statement();
+    }
+
+    return new stmt.If(condition, thenBranch, elseBranch);
   }
 
   private printStatement(): stmt.Stmt {

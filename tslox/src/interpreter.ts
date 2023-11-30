@@ -109,10 +109,16 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     return a === b;
   }
 
-  visitExpressionStmt(stmt: stmt.Expression): void {
-    const value = this.evaluate(stmt.expression);
+  visitExpressionStmt(st: stmt.Expression): void {
+    const value = this.evaluate(st.expression);
+  }
 
-    // this.registerExecutedExprStmtValue(value);
+  visitIfStmt(st: stmt.If): void {
+    if (this.isTruthy(this.evaluate(st.condition))) {
+      this.execute(st.thenBranch);
+    } else if (st.elseBranch !== null) {
+      this.execute(st.elseBranch);
+    }
   }
 
   visitPrintStmt(stmt: stmt.Print): void {
