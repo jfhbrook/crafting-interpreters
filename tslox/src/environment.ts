@@ -7,7 +7,7 @@ import { RuntimeError } from './error';
 export class Environment {
   private values: Record<string, Value>;
 
-  constructor() {
+  constructor(private readonly enclosing: Environment | null = null) {
     this.values = {};
   }
 
@@ -15,10 +15,10 @@ export class Environment {
     this.values[name] = value;
   }
 
-  get(name: Token) {
-    if (this.has(name)) {
-      return this.values[name.lexeme];
-    }
+  get(name: Token): Value {
+    if (this.has(name)) return this.values[name.lexeme];
+    if (this.enclosing) return this.enclosing.get(name);
+
     throw new RuntimeError(name, `Undefined variable '${name.lexeme}'.`);
   }
 
@@ -29,6 +29,11 @@ export class Environment {
   assign(name: Token, value: Value): void {
     if (this.has(name)) {
       this.values[name.lexeme] = value;
+      return;
+    }
+
+    if (this.enclosing) {
+      this.enclosing.assign(name, value);
       return;
     }
 

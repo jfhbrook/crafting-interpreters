@@ -15,12 +15,16 @@ export class AstPrinter implements expr.Visitor<string>, stmt.Visitor<string> {
     }
   }
 
-  visitExpressionStmt(stmt: stmt.Expression): string {
-    return this.parenthesize("expr", stmt.expression);
+  visitExpressionStmt(st: stmt.Expression): string {
+    return this.parenthesize("expr", st.expression);
   }
 
-  visitPrintStmt(stmt: stmt.Print): string {
-    return this.parenthesize("print", stmt.expression);
+  visitPrintStmt(st: stmt.Print): string {
+    return this.parenthesize("print", st.expression);
+  }
+
+  visitBlockStmt(st: stmt.Block): string {
+    return this.parenthesize("block", this.print(st.statements));
   }
 
   visitVarStmt(stmt: stmt.Var): string {

@@ -1,6 +1,7 @@
 import { Token } from './token'
 import { Expr } from './expr'
 
+Block      :: statements: Stmt[]
 Expression :: expression: Expr
 Print      :: expression: Expr
 Var        :: name: Token, initializer: Expr | null

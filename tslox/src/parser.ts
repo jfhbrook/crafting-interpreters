@@ -108,7 +108,7 @@ export class Parser {
     }
   }
 
-  private declaration() {
+  private declaration(): stmt.Stmt | null {
     try {
       if (this.match(TokenType.Var)) return this.varDeclaration();
 
@@ -123,7 +123,7 @@ export class Parser {
     }
   }
 
-  private varDeclaration() {
+  private varDeclaration(): stmt.Stmt {
     const name: Token = this.consume(TokenType.Identifier, "Expect variable name.");
 
     let initializer: expr.Expr | null = null;
@@ -137,6 +137,7 @@ export class Parser {
 
   private statement(): stmt.Stmt {
     if (this.match(TokenType.Print)) return this.printStatement();
+    if (this.match(TokenType.LeftBrace)) return new stmt.Block(this.block());
     return this.expressionStatement();
   }
 
@@ -144,6 +145,18 @@ export class Parser {
     const ex = this.expression();
     this.consume(TokenType.Semicolon, "Expect ';' after value.");
     return new stmt.Print(ex);
+  }
+
+  private block(): stmt.Stmt[] {
+    const statements: stmt.Stmt[] = [];
+
+    while (!this.check(TokenType.RightBrace) && !this.isAtEnd()) {
+      const statement = this.declaration();
+      if (statement) statements.push(statement);
+    }
+
+    this.consume(TokenType.RightBrace, "Expect '}' after block.");
+    return statements;
   }
 
   private expressionStatement(): stmt.Stmt {
