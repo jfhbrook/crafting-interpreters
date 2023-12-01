@@ -1,7 +1,7 @@
 import * as expr from './expr';
 import * as stmt from './stmt';
 import { Token, TokenType } from './token';
-import { Callable, IInterpreter, Value } from './value';
+import { Callable, Value } from './value';
 import { Environment } from './environment';
 import { callable } from './callable';
 import { errors, RuntimeError } from './error';
@@ -45,7 +45,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     
     this.globals.define("clock", {
       arity() { return 0; },
-      call(interpreter: IInterpreter, args: Value[]) {
+      call(interpreter: Interpreter, args: Value[]) {
         return Date.now() / 1000;
       }
     });
@@ -82,7 +82,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     st.accept(this);
   }
 
-  private executeBlock(statements: stmt.Stmt[], environment: Environment): void {
+  executeBlock(statements: stmt.Stmt[], environment: Environment): void {
     const previous = this.environment;
     let error: any = null;
     try {

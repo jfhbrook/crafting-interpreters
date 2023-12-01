@@ -110,6 +110,7 @@ export class Parser {
 
   private declaration(): stmt.Stmt | null {
     try {
+      if (this.match(TokenType.Fun)) return this.function("function");
       if (this.match(TokenType.Var)) return this.varDeclaration();
 
       return this.statement();
@@ -228,6 +229,24 @@ export class Parser {
     const ex = this.expression();
     this.consume(TokenType.Semicolon, "Expect ';' after value.");
     return new stmt.Expression(ex);
+  }
+
+  private function(kind: string): stmt.Function {
+    const name: Token = this.consume(TokenType.Identifier,  `Expect ${kind} name.`);
+    const parameters: Token[] = [];
+    if (!this.check(TokenType.RightParen)) {
+      do {
+        if (parameters.length >= 255) {
+          errors.error(this.peek(), "Can't have more than 255 parameters.");
+        }
+
+        parameters.push(this.consume(TokenType.Identifier, "Expect parameter name."));
+      } while (this.match(TokenType.Comma));
+    }
+    this.consume(TokenType.RightParen, "Expect ')' after parameters.");
+    this.consume(TokenType.LeftBrace, `Expect '{' before ${kind} body.`);
+    const body: stmt.Stmt[] = this.block();
+    return new stmt.Function(name, parameters, body);
   }
 
   private expression(): expr.Expr {
