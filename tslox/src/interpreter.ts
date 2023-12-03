@@ -3,7 +3,7 @@ import * as stmt from './stmt';
 import { Token, TokenType } from './token';
 import { Callable, Value } from './value';
 import { Environment } from './environment';
-import { callable } from './callable';
+import { Fn } from './callable';
 import { errors, RuntimeError } from './error';
 
 function checkNumberOperand(operator: Token, operand: Value): operand is number {
@@ -124,6 +124,11 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     this.evaluate(st.expression);
   }
 
+  visitFunctionStmt(st: stmt.Function): void {
+    const fn = new Fn(st);
+    this.environment.define(st.name.lexeme, fn);
+  }
+
   visitIfStmt(st: stmt.If): void {
     if (this.isTruthy(this.evaluate(st.condition))) {
       this.execute(st.thenBranch);
@@ -216,16 +221,14 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       args.push(this.evaluate(arg));
     }
 
-    const fn: Callable | null = callable(callee);
-
-    if (!fn) {
+    if (!Fn.isFunction(callee)) {
       throw new RuntimeError(ex.paren, "Can only call functions and classes.");
     }
 
-    if (args.length !== fn.arity()) {
-      throw new RuntimeError(ex.paren, `Expected ${fn.arity()} arguments but got ${args.length}.`);
+    if (args.length !== callee.arity()) {
+      throw new RuntimeError(ex.paren, `Expected ${callee.arity()} arguments but got ${args.length}.`);
     }
-    return fn.call(this, args);
+    return callee.call(this, args);
   }
 
   visitGroupingExpr(ex: expr.Grouping): Value {

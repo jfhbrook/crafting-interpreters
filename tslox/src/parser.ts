@@ -165,7 +165,6 @@ export class Parser {
 
     let increment: expr.Expr | null = null;
     if (!this.check(TokenType.RightParen)) {
-      // console.log(this.peek());
       increment = this.expression();
     }
     this.consume(TokenType.RightParen, "Expect ')' after for clauses.");
@@ -233,6 +232,7 @@ export class Parser {
 
   private function(kind: string): stmt.Function {
     const name: Token = this.consume(TokenType.Identifier,  `Expect ${kind} name.`);
+    this.consume(TokenType.LeftParen, `Expect '(' after ${kind} name.`);
     const parameters: Token[] = [];
     if (!this.check(TokenType.RightParen)) {
       do {
