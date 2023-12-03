@@ -2,6 +2,7 @@ import { Callable, Value } from './value';
 import * as stmt from './stmt';
 import { Environment } from './environment';
 import { Interpreter } from './interpreter';
+import { Return } from './error';
 
 export class Fn implements Callable {
   static isFunction(fn: any): fn is Fn {
@@ -21,7 +22,15 @@ export class Fn implements Callable {
       environment.define(this.declaration.params[i].lexeme, args[i]);
     }
 
-    interpreter.executeBlock(this.declaration.body, environment);
+    try {
+      interpreter.executeBlock(this.declaration.body, environment);
+    } catch (err) {
+      if (Return.isReturn(err)) {
+        return err.value;
+      }
+      throw err;
+    }
+
     return null;
   }
 }

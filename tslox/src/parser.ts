@@ -140,6 +140,7 @@ export class Parser {
     if (this.match(TokenType.For)) return this.forStatement();
     if (this.match(TokenType.If)) return this.ifStatement();
     if (this.match(TokenType.Print)) return this.printStatement();
+    if (this.match(TokenType.Return)) return this.returnStatement();
     if (this.match(TokenType.While)) return this.whileStatement();
     if (this.match(TokenType.LeftBrace)) return new stmt.Block(this.block());
     return this.expressionStatement();
@@ -201,6 +202,17 @@ export class Parser {
     const ex = this.expression();
     this.consume(TokenType.Semicolon, "Expect ';' after value.");
     return new stmt.Print(ex);
+  }
+
+  private returnStatement(): stmt.Stmt {
+    const keyword = this.previous();
+    let value: expr.Expr | null = null;
+    if (!this.check(TokenType.Semicolon)) {
+      value = this.expression();
+    }
+
+    this.consume(TokenType.Semicolon, "Expect ';' after return value.");
+    return new stmt.Return(keyword, value);
   }
 
   private whileStatement(): stmt.Stmt {

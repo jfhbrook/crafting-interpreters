@@ -12,6 +12,7 @@
 // the Host.
 
 import { Token, TokenType } from './token';
+import { Value } from './value';
 
 export class ParseError extends Error {
   code: string = 'ParseError';
@@ -26,17 +27,27 @@ export class ParseError extends Error {
   constructor() { super('ParseError'); }
 }
 
-
-
 export class RuntimeError extends Error {
   code: string = 'RuntimeError';
 
   static isRuntimeError(err: any): err is RuntimeError {
-    return err.code === 'RuntimeError' && err instanceof Error;
+    return ['RuntimeError', 'Return'].includes(err.code) && err instanceof Error;
   }
 
-  constructor(public readonly token: Token, message: string) {
+  constructor(public readonly token: Token | null, message: string) {
     super(message);
+  }
+}
+
+export class Return extends RuntimeError {
+  code: string = 'Return';
+
+  static isReturn(err: any): err is Return {
+    return err.code === 'Return' && err instanceof Error;
+  }
+
+  constructor(public readonly value: Value) {
+    super(null, '');
   }
 }
 

@@ -1,10 +1,10 @@
 import * as expr from './expr';
 import * as stmt from './stmt';
 import { Token, TokenType } from './token';
-import { Callable, Value } from './value';
+import { Value } from './value';
 import { Environment } from './environment';
 import { Fn } from './callable';
-import { errors, RuntimeError } from './error';
+import { errors, Return, RuntimeError } from './error';
 
 function checkNumberOperand(operator: Token, operand: Value): operand is number {
   if (typeof operand === 'number') return true;
@@ -41,7 +41,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   constructor() {
     this.globals = new Environment();
-    this.environment = new Environment();
+    this.environment = this.globals;
     
     this.globals.define("clock", {
       arity() { return 0; },
@@ -140,6 +140,12 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   visitPrintStmt(stmt: stmt.Print): void {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
+  }
+
+  visitReturnStmt(st: stmt.Return): void {
+    const value = st.value !== null ? this.evaluate(st.value) : null;
+
+    throw new Return(value);
   }
 
   visitVarStmt(stmt: stmt.Var): void {
