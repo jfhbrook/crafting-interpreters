@@ -9,14 +9,17 @@ export class Fn implements Callable {
     return typeof fn.call === 'function';
   }
 
-  constructor(private readonly declaration: stmt.Function) {}
+  constructor(
+    private readonly declaration: stmt.Function,
+    private readonly closure: Environment
+  ) {}
 
   arity(): number {
     return this.declaration.params.length;
   }
 
   call(interpreter: Interpreter, args: Value[]): Value {
-    const environment = new Environment(interpreter.globals);
+    const environment = new Environment(this.closure);
 
     for (let i = 0; i < this.declaration.params.length; i++) {
       environment.define(this.declaration.params[i].lexeme, args[i]);

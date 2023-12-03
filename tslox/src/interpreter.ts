@@ -3,7 +3,7 @@ import * as stmt from './stmt';
 import { Token, TokenType } from './token';
 import { Value } from './value';
 import { Environment } from './environment';
-import { Fn } from './callable';
+import { Fn } from './function';
 import { errors, Return, RuntimeError } from './error';
 
 function checkNumberOperand(operator: Token, operand: Value): operand is number {
@@ -125,7 +125,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   }
 
   visitFunctionStmt(st: stmt.Function): void {
-    const fn = new Fn(st);
+    const fn = new Fn(st, this.environment);
     this.environment.define(st.name.lexeme, fn);
   }
 
