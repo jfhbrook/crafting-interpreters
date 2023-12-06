@@ -15,8 +15,10 @@ at C.
 
 ## notes
 
-should write my basic in typescript first, then port to rust later
+should write my basic in typescript first, then port to rust later:
 
-should use node core's readline instead of isaac's read:
-
-<https://nodejs.org/api/readline.html>
+- better dynamic interface driven support
+- easier to cheese errors until I know what interface I want
+- can develop test suite and architecture to target
+- can follow structure of Crafting Interpreters instead of jumping straight to
+  VM

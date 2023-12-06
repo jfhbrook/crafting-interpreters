@@ -19,5 +19,8 @@
   },
   "dependencies": {
     "read": "^3.0.0"
+  },
+  "volta": {
+    "node": "21.4.0"
   }
 }

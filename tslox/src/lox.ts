@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
 
-import { read } from 'read';
+import * as readline from 'node:readline/promises';
 
 import { Token } from './token';
 import { Scanner } from './scanner';
@@ -45,38 +45,37 @@ async function runFile(file: string): Promise<void> {
   }
 }
 
-async function readLine(): Promise<string | null> {
-  let line = await read({ prompt: '> ' });
-
-  line.trim();
-
-  // This is a massive hack - I could also see doing this 
-  if (line.length && !';}'.includes(line[line.length - 1])) {
-    // line += ';';
-  }
-
-  return line.length ? line : null;
-}
-
 async function runPrompt(): Promise<void> {
+  const prompt = readline.createInterface({ input: process.stdin, output: process.stdout });
+  prompt.setPrompt('> ');
+
+  // TODO: load hitsory
   interpreter.flags.repl = true;
-  let line: string | null = null;
 
-  while (true) {
+  prompt.prompt();
+  for await (const line of prompt) {
     try {
-      line = await readLine();
+      // TODO: I don't like that the prompt also requires semis, sigh
+      /*
+      line.trim();
 
-      if (line) {
-        await run(line);
-
-        errors.hadError = false;
-        errors.hadRuntimeError = false;
+      if (line.length && !';}'.includes(line[line.length - 1])) {
+        line += ';';
       }
+      */
+
+      await run(line);
+
+      errors.hadError = false;
+      errors.hadRuntimeError = false;
     } catch (err) {
       console.error(err);
       break;
     }
+    prompt.prompt();
   }
+
+  // TODO: save history
 }
 
 async function run(source: string): Promise<void> {
