@@ -10,6 +10,7 @@ export enum TokenKind {
   Separator,
   OfType,
   Ident,
+  Union,
   Whitespace
 }
 
@@ -23,6 +24,7 @@ export const scanner = buildLexer([
   [true, /^"[a-zA-Z_-\/.]+"/, TokenKind.Path],
   [true, /^::/, TokenKind.Separator],
   [true, /^:/, TokenKind.OfType],
-  [true, /^[a-zA-Z0-9_\[\]]/, TokenKind.Ident],
+  [true, /^[a-zA-Z0-9_\[\]]+/, TokenKind.Ident],
+  [true, /^|/, TokenKind.Union],
   [false, /^\s*/, TokenKind.Whitespace]
 ]);
