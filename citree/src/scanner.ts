@@ -13,7 +13,8 @@ export enum TokenKind {
   OfType,
   Ident,
   Union,
-  Whitespace
+  Whitespace,
+  Illegal
 }
 
 export const scanner = buildLexer([
@@ -30,5 +31,6 @@ export const scanner = buildLexer([
   [true, /^::/, TokenKind.Separator],
   [true, /^:/, TokenKind.OfType],
   [true, /^|/, TokenKind.Union],
-  [false, /^\s*/, TokenKind.Whitespace]
+  [false, /^\s*/, TokenKind.Whitespace],
+  [true, /.*/, TokenKind.Illegal]
 ]);
