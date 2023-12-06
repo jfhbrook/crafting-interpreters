@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc ./src/*.ts",
     "start": "npm run build && node ./src/main.js",
-    "test": "tsc ./test/*.ts && tap ./test/*.js",
+    "test": "tsc ./src/*.ts ./test/*.ts && tap ./test/*.js",
     "console": "npm run build && node",
     "clean": "rm -f ./src/*.js ./test/*.js"
   },
