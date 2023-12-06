@@ -7,7 +7,7 @@ export enum TokenKind {
   Asterisk,
   As,
   Path,
-  Kind,
+  Type,
   In,
   HasFields,
   OfType,
@@ -19,7 +19,7 @@ export enum TokenKind {
 
 export const scanner = buildLexer([
   [true, /^import(?![a-zA-Z_-\/.])/, TokenKind.Import],
-  [true, /^kind(?![a-zA-Z_\/.])/, TokenKind.Kind],
+  [true, /^type(?![a-zA-Z_\/.])/, TokenKind.Type],
   [true, /^in(?![a-zA-Z_\/.]/, TokenKind.In],
   [true, /^{/, TokenKind.LBrace],
   [true, /^}/, TokenKind.RBrace],

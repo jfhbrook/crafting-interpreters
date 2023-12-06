@@ -1,4 +1,4 @@
-kind Expr in "./expr" {
+type Expr in "./expr" {
   import { Token } from './token'
   import { Value } from './value'
 
@@ -12,7 +12,7 @@ kind Expr in "./expr" {
   Variable => name: Token
 }
 
-kind Stmt in "./stmt" {
+type Stmt in "./stmt" {
   import { Token } from './token'
   import { Expr } from './expr'
 
