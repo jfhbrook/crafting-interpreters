@@ -7,6 +7,8 @@ export enum TokenKind {
   Asterisk,
   As,
   Path,
+  Kind,
+  In,
   Separator,
   OfType,
   Ident,
@@ -15,16 +17,18 @@ export enum TokenKind {
 }
 
 export const scanner = buildLexer([
-  [true, /^import/, TokenKind.Import],
+  [true, /^import(?![a-zA-Z_-\/.])/, TokenKind.Import],
+  [true, /^kind(?![a-zA-Z_\/.])/, TokenKind.Kind],
+  [true, /^in(?![a-zA-Z_\/.]/, TokenKind.In],
   [true, /^{/, TokenKind.LBrace],
   [true, /^}/, TokenKind.RBrace],
   [true, /^\*/, TokenKind.Asterisk],
   [true, /^as/, TokenKind.As],
   // TODO: this regexp is not cutting it lmao - test and iterate
   [true, /^"[a-zA-Z_-\/.]+"/, TokenKind.Path],
+  [true, /^[a-zA-Z0-9_\[\]]+/, TokenKind.Ident],
   [true, /^::/, TokenKind.Separator],
   [true, /^:/, TokenKind.OfType],
-  [true, /^[a-zA-Z0-9_\[\]]+/, TokenKind.Ident],
   [true, /^|/, TokenKind.Union],
   [false, /^\s*/, TokenKind.Whitespace]
 ]);
