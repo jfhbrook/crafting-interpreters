@@ -2,6 +2,7 @@ import { buildLexer } from 'typescript-parsec';
 
 export enum TokenKind {
   Import,
+  From,
   LBrace,
   RBrace,
   Asterisk,
@@ -21,6 +22,7 @@ export enum TokenKind {
 
 export const scanner = buildLexer([
   [true, /^import(?![a-zA-Z_-\/.])/, TokenKind.Import],
+  [true, /^from(?![a-zA-Z_-\/.])/, TokenKind.From],
   [true, /^type(?![a-zA-Z_\/.])/, TokenKind.Type],
   [true, /^in(?![a-zA-Z_\/.]/, TokenKind.In],
   [true, /^{/, TokenKind.LBrace],
