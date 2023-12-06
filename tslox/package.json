@@ -4,10 +4,10 @@
   "description": "",
   "main": "lox.js",
   "scripts": {
-    "build": "npm run ast:generate && tsc ./src/*.ts",
+    "build": "npm run ast:generate && tsc",
     "start": "npm run build && node ./src/main.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ast:generate": "tsc ./scripts/generate-ast.ts && node ./scripts/generate-ast.js ./src",
+    "ast:generate": "tsc ./scripts/*.ts && node ./scripts/generate-ast.js ./src",
     "console": "npm run build && node",
     "clean": "rm -f ./src/*.js ./scripts/*.js"
   },

@@ -4,9 +4,9 @@
   "description": "A DSL for generating ASTs in TypeScript",
   "main": "src/index.js",
   "scripts": {
-    "build": "tsc ./src/*.ts",
+    "build": "tsc",
     "start": "npm run build && node ./src/main.js",
-    "test": "tsc ./src/*.ts ./test/*.ts && tap ./test/*.js",
+    "test": "npm run build && tap ./test/*.js",
     "console": "npm run build && node",
     "clean": "rm -f ./src/*.js ./test/*.js"
   },

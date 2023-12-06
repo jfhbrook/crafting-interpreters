@@ -69,7 +69,7 @@ export const errors = {
 
   runtimeError(err: RuntimeError): void {
     console.error(`${err.message}
-[line ${err.token.line}]`);
+[line ${err.token ? err.token.line : -1}]`);
     this.hadRuntimeError = true;
   },
 
