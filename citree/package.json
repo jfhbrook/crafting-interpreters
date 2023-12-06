@@ -1,0 +1,30 @@
+{
+  "name": "citree",
+  "version": "1.0.0",
+  "description": "A DSL for generating ASTs in TypeScript",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "tsc ./src/*.ts",
+    "start": "npm run build && node ./src/main.js",
+    "test": "tsc ./test/*.ts && tap ./test/*.js",
+    "console": "npm run build && node",
+    "clean": "rm -f ./src/*.js ./test/*.js"
+  },
+  "keywords": [
+    "ast",
+    "parser",
+    "scanner",
+    "lexer"
+  ],
+  "author": "Josh Holbrook",
+  "license": "MIT",
+  "dependencies": {
+    "minimist": "^1.2.8",
+    "nunjucks": "^3.2.4",
+    "typescript-parsec": "^0.3.4"
+  },
+  "devDependencies": {
+    "tap": "^18.6.1",
+    "typescript": "^5.3.2"
+  }
+}

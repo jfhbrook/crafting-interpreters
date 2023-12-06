@@ -1,0 +1,27 @@
+kind Expr in "./expr" {
+  import { Token } from './token'
+  import { Value } from './value'
+
+  Assign   :: name: Token, value: Expr
+  Binary   :: left: Expr, operator: Token, right: Expr
+  Call     :: callee: Expr, paren: Token, args: Expr[]
+  Grouping :: expression: Expr
+  Literal  :: value: Value
+  Logical  :: left: Expr, operator: Token, right: Expr
+  Unary    :: operator: Token, right: Expr
+  Variable :: name: Token
+}
+
+kind Stmt in "./stmt" {
+  import { Token } from './token'
+  import { Expr } from './expr'
+
+  Block      :: statements: Stmt[]
+  Expression :: expression: Expr
+  Function   :: name: Token, params: Token[], body: Stmt[]
+  If         :: condition: Expr, thenBranch: Stmt, elseBranch: Stmt | null
+  Print      :: expression: Expr
+  Return     :: keyword: Token, value: Expr | null
+  Var        :: name: Token, initializer: Expr | null
+  While      :: condition: Expr, body: Stmt
+}
