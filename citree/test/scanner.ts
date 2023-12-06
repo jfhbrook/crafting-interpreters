@@ -14,8 +14,14 @@ type Expr in "./expr" {
   Call     => args: Expr[]
 }`
 
-const EXPECTED = [
-  [TokenKind.Comment, '// example'],
+const EXPECTED_EXAMPLE = [
+  [TokenKind.Comment, '// example\n'],
+
+  [TokenKind.Type, 'type'],
+  [TokenKind.Ident, 'Expr'],
+  [TokenKind.In, 'in'],
+  [TokenKind.Path, '"./expr"'],
+  [TokenKind.LBrace, '{'],
 
   [TokenKind.Import, 'import'],
   [TokenKind.LBrace, '{'],
@@ -29,11 +35,6 @@ const EXPECTED = [
   [TokenKind.From, 'from'],
   [TokenKind.Path, '"./value"'],
 
-  [TokenKind.Type, 'type'],
-  [TokenKind.Ident, 'Expr'],
-  [TokenKind.In, 'in'],
-  [TokenKind.Path, '"./expr"'],
-  [TokenKind.LBrace, '{'],
 
   [TokenKind.Ident, 'Assign'],
   [TokenKind.HasFields, '=>'],
@@ -57,16 +58,48 @@ const EXPECTED = [
   [TokenKind.RBrace, '}']
 ];
 
-t.test('it scans', t => {
-  let token = scanner.parse(EXAMPLE);
+const SIMPLE = [
+  [TokenKind.Comment, '// example\n'],
+  [TokenKind.Import, 'import'],
+  [TokenKind.LBrace, '{'],
+  [TokenKind.RBrace, '}'],
+  [TokenKind.From, 'from'],
+  [TokenKind.Path, '"./path"'],
+  [TokenKind.Path, "'./path'"],
+  [TokenKind.Asterisk, '*'],
+  [TokenKind.Type, 'type'],
+  [TokenKind.In, 'in'],
+  [TokenKind.Ident, 'Assign[]'],
+  [TokenKind.HasFields, '=>'],
+  [TokenKind.OfType, ':'],
+  [TokenKind.Comma, ','],
+  [TokenKind.Union, '|']
+];
 
-  for (const [kind, text] of EXPECTED) {
-    t.ok(token, 'current token is defined');
+for (const [kind, text] of SIMPLE) {
+  t.test(`it scans ${text}`, t => {
+    let token = scanner.parse(text);
+
+    t.ok(token, 'token is defined');
     token = <Token<TokenKind>>token;
     t.equal(token.kind, kind, `token kind is ${kind}`);
     t.equal(token.text, text, `token text is '${text}'`);
+    t.notOk(token.next, 'no following tokens');
+    t.end();
+  });
+}
+
+
+t.test('it scans a full example', t => {
+  let token: any = scanner.parse(EXAMPLE);
+
+  const results = [[token.kind, token.text]];
+  while (token.next) {
     token = token.next;
+    results.push([token.kind, token.text]);
   }
 
-  t.notOk(token, 'no more tokens');
+  t.same(results, EXPECTED_EXAMPLE);
+
+  t.end();
 });
