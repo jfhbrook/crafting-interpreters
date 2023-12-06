@@ -35,6 +35,6 @@ export const scanner = buildLexer([
   [true, /^:/g, TokenKind.OfType],
   [true, /^\|/g, TokenKind.Union],
   [true, /^,/g, TokenKind.Comma],
-  [true, /^[/][/][^\n]*\n/g, TokenKind.Comment],
+  [false, /^[/][/][^\n]*\n/g, TokenKind.Comment],
   [false, /^\s+/g, TokenKind.Whitespace]
 ]);

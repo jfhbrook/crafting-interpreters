@@ -15,8 +15,6 @@ type Expr in "./expr" {
 }`
 
 const EXPECTED_EXAMPLE = [
-  [TokenKind.Comment, '// example\n'],
-
   [TokenKind.Type, 'type'],
   [TokenKind.Ident, 'Expr'],
   [TokenKind.In, 'in'],
@@ -59,7 +57,6 @@ const EXPECTED_EXAMPLE = [
 ];
 
 const SIMPLE = [
-  [TokenKind.Comment, '// example\n'],
   [TokenKind.Import, 'import'],
   [TokenKind.LBrace, '{'],
   [TokenKind.RBrace, '}'],
