@@ -37,7 +37,8 @@ function enumerateStatements(statements: stmt.Stmt[]) {
 export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   public flags: Flags = { repl: false };
   public readonly globals: Environment;
-  private environment: Environment;
+  private environment: Environment;;
+  private locals: Map<expr.Expr, number>;
 
   constructor() {
     this.globals = new Environment();
@@ -49,6 +50,8 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
         return Date.now() / 1000;
       }
     });
+
+    this.locals = new Map();
   }
 
   public interpret(statements: stmt.Stmt[]): void {
@@ -80,6 +83,10 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   private execute<S extends stmt.Stmt>(st: S): void {
     st.accept(this);
+  }
+
+  resolve(ex: expr.Expr, depth: number): void {
+    this.locals.set(ex, depth);
   }
 
   executeBlock(statements: stmt.Stmt[], environment: Environment): void {
@@ -168,7 +175,12 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   visitAssignExpr(ex: expr.Assign) {
     const value = this.evaluate(ex.value);
-    this.environment.assign(ex.name, value);
+    const distance = this.locals.get(ex);
+    if (typeof distance === 'number') {
+      this.environment.assignAt(distance, ex.name, value);
+    } else {
+      this.globals.assign(ex.name, value);
+    }
     return value;
   }
 
@@ -259,6 +271,15 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   }
 
   visitVariableExpr(ex: expr.Variable): Value {
-    return this.environment.get(ex.name);
+    return this.lookupVariable(ex.name, ex);
+  }
+
+  private lookupVariable(name: Token, ex: expr.Expr): Value {
+    const distance = this.locals.get(ex);
+    if (typeof distance === 'number') {
+      return this.environment.getAt(distance, name.lexeme);
+    } else {
+      return this.globals.get(name);
+    }
   }
 }

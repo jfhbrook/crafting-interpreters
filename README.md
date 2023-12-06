@@ -15,4 +15,8 @@ at C.
 
 ## notes
 
-intentionally blank (for now)
+should write my basic in typescript first, then port to rust later
+
+should use node core's readline instead of isaac's read:
+
+<https://nodejs.org/api/readline.html>

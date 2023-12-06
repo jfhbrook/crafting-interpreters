@@ -6,6 +6,7 @@ import { Token } from './token';
 import { Scanner } from './scanner';
 import { Parser } from './parser';
 import { Interpreter } from './interpreter';
+import { Resolver } from './resolver';
 import { errors } from './error';
 
 const interpreter = new Interpreter();
@@ -95,6 +96,11 @@ async function run(source: string): Promise<void> {
 
   const parser = new Parser(tokens);
   const statements = parser.parse();
+
+  if (errors.hadError) return;
+
+  const resolver = new Resolver(interpreter);
+  resolver.resolve(statements);
 
   if (errors.hadError) return;
 

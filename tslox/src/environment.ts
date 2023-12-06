@@ -22,6 +22,35 @@ export class Environment {
     throw new RuntimeError(name, `Undefined variable '${name.lexeme}'.`);
   }
 
+  // Note, these "is not null" checks should be unnecessary because we know
+  // the env is defined already (the resolver ensures that)
+  getAt(distance: number, name: string): Value {
+    const env = this.ancestor(distance);
+    if (env) {
+      return env.values[name];
+    }
+    return null;
+  }
+
+  assignAt(distance: number, name: Token, value: Value): void {
+    const env = this.ancestor(distance);
+    if (env) {
+      env.values[name.lexeme] = value;
+    }
+  }
+
+  ancestor(distance: number) {
+    let env: Environment | null = this;
+    for (let i = 0; i < distance; i++) {
+      if (!env) {
+        break;
+      }
+      env = env.enclosing;
+    }
+
+    return env;
+  }
+
   has(name: Token): boolean {
     return typeof this.values[name.lexeme]  !== 'undefined';
   }
