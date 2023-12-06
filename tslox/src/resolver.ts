@@ -77,7 +77,7 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     scope[name.lexeme] = false;
   }
 
-  // marked as resolved by setting to true
+  // marked as defined by setting to true
   private define(name: Token): void {
     if (!this.scopes.length) return;
 
