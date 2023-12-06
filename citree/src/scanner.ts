@@ -9,7 +9,7 @@ export enum TokenKind {
   Path,
   Kind,
   In,
-  Separator,
+  HasFields,
   OfType,
   Ident,
   Union,
@@ -28,7 +28,7 @@ export const scanner = buildLexer([
   // TODO: this regexp is not cutting it lmao - test and iterate
   [true, /^"[a-zA-Z_-\/.]+"/, TokenKind.Path],
   [true, /^[a-zA-Z0-9_\[\]]+/, TokenKind.Ident],
-  [true, /^::/, TokenKind.Separator],
+  [true, /^=>/, TokenKind.HasFields],
   [true, /^:/, TokenKind.OfType],
   [true, /^|/, TokenKind.Union],
   [false, /^\s*/, TokenKind.Whitespace],
