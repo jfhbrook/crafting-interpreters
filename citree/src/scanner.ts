@@ -26,8 +26,8 @@ export const scanner = buildLexer([
   [true, /^}/, TokenKind.RBrace],
   [true, /^\*/, TokenKind.Asterisk],
   [true, /^as/, TokenKind.As],
-  // TODO: this regexp is not cutting it lmao - test and iterate
-  [true, /^"[a-zA-Z_-\/.]+"/, TokenKind.Path],
+  [true, /^"([^"\\]|\\.)*"/, TokenKind.Path],
+  [true, /^'([^'\\]|\\.)*'/, TokenKind.Path],
   [true, /^[a-zA-Z0-9_\[\]]+/, TokenKind.Ident],
   [true, /^=>/, TokenKind.HasFields],
   [true, /^:/, TokenKind.OfType],
