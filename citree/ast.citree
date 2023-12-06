@@ -1,3 +1,5 @@
+// Expressions
+
 type Expr in "./expr" {
   import { Token } from './token'
   import { Value } from './value'
@@ -11,6 +13,8 @@ type Expr in "./expr" {
   Unary    => operator: Token, right: Expr
   Variable => name: Token
 }
+
+// Statements
 
 type Stmt in "./stmt" {
   import { Token } from './token'
