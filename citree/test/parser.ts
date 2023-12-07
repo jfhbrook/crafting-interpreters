@@ -2,7 +2,7 @@ import t from 'tap';
 
 import { expectEOF, expectSingleResult } from 'typescript-parsec';
 
-import { scanner, TokenKind } from '../src/scanner';
+import { scanner } from '../src/scanner';
 import { parser } from '../src/parser';
 
 const EXAMPLE = `// example
