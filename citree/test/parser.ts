@@ -40,9 +40,10 @@ const EXPECT = {
         {
           type: "node",
           name: "Assign",
-          fields: "name: Token, value: Expr | null",
+          fields:
+            "public readonly name: Token, public readonly value: Expr | null",
         },
-        { type: "node", name: "Call", fields: "args: Expr[]" },
+        { type: "node", name: "Call", fields: "public readonly args: Expr[]" },
       ],
     },
   ],

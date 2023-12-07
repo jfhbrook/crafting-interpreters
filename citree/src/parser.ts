@@ -94,7 +94,7 @@ const nodeDefinition: Parser<TokenKind, NodeDefinition> = apply(
     return {
       type: "node",
       name: name.text,
-      fields: fields.join(", "),
+      fields: fields.map((f) => `public readonly ${f}`).join(", "),
     };
   },
 );
