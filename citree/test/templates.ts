@@ -34,7 +34,7 @@ class Assign extends Expr {
     super();
   }
 
-  accept<R>(visitor: Visitor<R>): R {
+  accept<R>(visitor: ExprVisitor<R>): R {
     return visitor.visitAssignExpr(this);
   }
 }

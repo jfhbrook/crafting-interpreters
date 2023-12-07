@@ -28,7 +28,7 @@ const EXPECT = {
     {
       type: "type",
       name: "Expr",
-      path: '"./expr"',
+      path: './expr',
       imports: [
         {
           type: "import",

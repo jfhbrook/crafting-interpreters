@@ -14,7 +14,7 @@ class {{node.name}} extends {{type.name}} {
     super();
   }
 
-  accept<R>(visitor: Visitor<R>): R {
+  accept<R>(visitor: {{type.name}}Visitor<R>): R {
     return visitor.visit{{node.name}}{{type.name}}(this);
   }
 }{% endfor %}{% endfor %}

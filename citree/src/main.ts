@@ -1,4 +1,4 @@
-import { readFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 
 import { expectEOF, expectSingleResult } from "typescript-parsec";
 import minimist from "minimist";
@@ -28,7 +28,8 @@ export default async function main() {
   const types = resolveTypes(filename, spec);
 
   for (const [path, ts] of Object.entries(types)) {
-    console.log(
+    await writeFile(
+      path,
       render({
         imports: imports[path] || [],
         types: Object.entries(ts).map(([_, t]): TypeConfig => t),

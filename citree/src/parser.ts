@@ -7,6 +7,7 @@ import {
   rep,
   seq,
   tok,
+  Token
 } from "typescript-parsec";
 import { TokenKind } from "./scanner";
 
@@ -35,6 +36,17 @@ export type Spec = {
   types: TypeDefinition[];
 };
 
+function applyPath(pathToken: Token<TokenKind>): string {
+    let path = pathToken.text;
+    if (path[0] === "'") {
+      path = path.slice(1, path.length - 1);
+      path = path.replace(/"/, '\\"').replace(/\\'/, "'");
+      path = `"${path}"`;
+    }
+    path = JSON.parse(path);
+    return path;
+}
+
 const importStatement: Parser<TokenKind, ImportStatement> = apply(
   seq(
     tok(TokenKind.Import),
@@ -59,13 +71,7 @@ const importStatement: Parser<TokenKind, ImportStatement> = apply(
     tok(TokenKind.Path),
   ),
   ([_import, target, _from, pathToken]) => {
-    let path = pathToken.text;
-    if (path[0] === "'") {
-      path = path.slice(1, path.length - 1);
-      path = path.replace(/"/, '\\"').replace(/\\'/, "'");
-      path = `"${path}"`;
-    }
-    path = JSON.parse(path);
+    const path = applyPath(pathToken);
     return {
       type: "import",
       statement: `import ${target} from ${JSON.stringify(path)};`,
@@ -124,7 +130,7 @@ const typeDefinition: Parser<TokenKind, TypeDefinition> = apply(
     return {
       type: "type",
       name: name.text,
-      path: path ? path[1].text : null,
+      path: path ? applyPath(path[1]) : null,
       imports: imps,
       nodes,
     };
