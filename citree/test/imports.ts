@@ -1,7 +1,8 @@
+import { resolve } from "path";
 import t from "tap";
 
 import { Spec } from "../src/parser";
-import { resolveImports } from "../src/imports";
+import { Imports, resolveImports } from "../src/imports";
 
 const SPEC: Spec = {
   imports: [
@@ -15,7 +16,7 @@ const SPEC: Spec = {
     {
       type: "type",
       name: "Expr",
-      path: '"./expr"',
+      path: "./expr",
       imports: [
         {
           type: "import",
@@ -28,10 +29,12 @@ const SPEC: Spec = {
   ],
 };
 
-const EXPECTED = {
-  Expr: ['import { Token } from "./token";', 'import * from "./value";'],
-};
+const EXPECTED: Imports = {};
+EXPECTED[resolve("./expr.ts")] = [
+  'import { Token } from "./token";',
+  'import * from "./value";',
+];
 
 t.test("resolves imports types", async (assert) => {
-  assert.same(resolveImports(SPEC), EXPECTED);
+  assert.same(resolveImports("./imports.ts", SPEC), EXPECTED);
 });

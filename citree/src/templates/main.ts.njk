@@ -1,0 +1,20 @@
+{% for import in imports %}{{import}}
+{% endfor %}
+{% for type in types %}export interface {{type.name}}Visitor<R> {
+  {% for node in type.nodes %}visit{{node.name}}{{type.name}}(node: {{node.name}}): R;
+{% endfor %}
+}
+
+export abstract class {{type.name}} {
+  abstract accept<R>(visitor: {{type.name}}Visitor<R>): R;
+}
+{% for node in type.nodes %}
+class {{node.name}} extends {{type.name}} {
+  constructor({{node.fields}}) {
+    super();
+  }
+
+  accept<R>(visitor: Visitor<R>): R {
+    return visitor.visit{{node.name}}{{type.name}}(this);
+  }
+}{% endfor %}{% endfor %}

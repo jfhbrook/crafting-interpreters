@@ -3,8 +3,11 @@ import { readFile } from "fs/promises";
 import { expectEOF, expectSingleResult } from "typescript-parsec";
 import minimist from "minimist";
 
-import { scanner } from "../src/scanner";
-import { parser } from "../src/parser";
+import { scanner } from "./scanner";
+import { parser } from "./parser";
+import { resolveImports } from "./imports";
+import { resolveTypes } from "./types";
+import { render, TypeConfig } from "./templates";
 
 export default async function main() {
   const argv = minimist(process.argv.slice(2));
@@ -21,7 +24,17 @@ export default async function main() {
     expectEOF(parser.parse(scanner.parse(contents))),
   );
 
-  console.log(spec);
+  const imports = resolveImports(filename, spec);
+  const types = resolveTypes(filename, spec);
+
+  for (const [path, ts] of Object.entries(types)) {
+    console.log(
+      render({
+        imports: imports[path] || [],
+        types: Object.entries(ts).map(([_, t]): TypeConfig => t),
+      }),
+    );
+  }
 }
 
 if (require.main) {
