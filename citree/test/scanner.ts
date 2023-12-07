@@ -72,18 +72,18 @@ const SIMPLE = [
 ];
 
 for (const [kind, text] of SIMPLE) {
-  t.test(`it scans ${text}`, async (t) => {
+  t.test(`it scans ${text}`, async (assert) => {
     let token = scanner.parse(text);
 
-    t.ok(token, "token is defined");
-    token = <Token<TokenKind>>token;
-    t.equal(token.kind, kind, `token kind is ${kind}`);
-    t.equal(token.text, text, `token text is '${text}'`);
-    t.notOk(token.next, "no following tokens");
+    assert.ok(token, "token is defined");
+    token = token as Token<TokenKind>;
+    assert.equal(token.kind, kind, `token kind is ${kind}`);
+    assert.equal(token.text, text, `token text is '${text}'`);
+    assert.notOk(token.next, "no following tokens");
   });
 }
 
-t.test("it scans a full example", async (t) => {
+t.test("it scans a full example", async (assert) => {
   let token: any = scanner.parse(EXAMPLE);
 
   const results = [[token.kind, token.text]];
@@ -92,5 +92,5 @@ t.test("it scans a full example", async (t) => {
     results.push([token.kind, token.text]);
   }
 
-  t.same(results, EXPECTED_EXAMPLE);
+  assert.same(results, EXPECTED_EXAMPLE);
 });

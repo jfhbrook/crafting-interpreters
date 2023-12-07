@@ -32,6 +32,6 @@ const EXPECTED = {
   Expr: ['import { Token } from "./token";', 'import * from "./value";'],
 };
 
-t.test("resolves imports types", async (t) => {
-  t.same(resolveImports(SPEC), EXPECTED);
+t.test("resolves imports types", async (assert) => {
+  assert.same(resolveImports(SPEC), EXPECTED);
 });

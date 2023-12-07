@@ -16,10 +16,10 @@ export type Imports = Record<TypeName, ImportStatement[]>;
 export function resolveImports(spec: Spec): Imports {
   const imps: Imports = {};
 
-  for (const type of spec.types) {
-    imps[type.name] = spec.imports
+  for (const t of spec.types) {
+    imps[t.name] = spec.imports
       .map((i) => i.statement)
-      .concat(type.imports.map((i) => i.statement));
+      .concat(t.imports.map((i) => i.statement));
   }
 
   return imps;
