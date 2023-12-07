@@ -18,14 +18,16 @@ type Expr in "./expr" {
 
 const EXPECT = {
   imports: [
-    { type: 'import', import: "import { Token } from './token';" },
+    { type: 'import', statement: 'import { Token } from "./token";', path: './token' },
   ],
   types: [{
     type: 'type',
     name: 'Expr',
     path: '"./expr"',
-    body: [
-      { type: 'import', import: 'import * from "./value";' },
+    imports: [
+      { type: 'import', statement: 'import * from "./value";', path: './value' },
+    ],
+    nodes: [
       { type: 'node', name: 'Assign', fields: 'name: Token, value: Expr | null' },
       { type: 'node', name: 'Call', fields: 'args: Expr[]' }
     ]

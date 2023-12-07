@@ -1,25 +1,27 @@
 import { alt, apply, list_sc, opt, Parser, rep, seq, tok } from 'typescript-parsec';
 import { TokenKind } from './scanner';
 
-type ImportStatement = {
+export type ImportStatement = {
   type: "import",
-  import: string
+  statement: string,
+  path: string
 };
 
-type NodeDefinition = {
+export type NodeDefinition = {
   type: "node",
   name: string,
   fields: string
 };
 
-type TypeDefinition = {
+export type TypeDefinition = {
   type: "type",
   name: string,
   path: string | null,
-  body: Array<ImportStatement | NodeDefinition>
+  imports: ImportStatement[],
+  nodes: NodeDefinition[]
 };
 
-type Spec = {
+export type Spec = {
   imports: ImportStatement[],
   types: TypeDefinition[]
 };
@@ -50,10 +52,18 @@ const importStatement: Parser<TokenKind, ImportStatement> = apply(
     tok(TokenKind.From),
     tok(TokenKind.Path)
   ),
-  ([_import, target, _from, path]) => {
+  ([_import, target, _from, pathToken]) => {
+    let path = pathToken.text;
+    if (path[0] === "'") {
+      path = path.slice(1, path.length - 1);
+      path = path.replace(/"/, '\\"').replace(/\\'/, "'");
+      path = `"${path}"`;
+    }
+    path = JSON.parse(path);
     return {
       type: 'import',
-      import: `import ${target} from ${path.text};`
+      statement: `import ${target} from ${JSON.stringify(path)};`,
+      path
     };
   }
 );
@@ -109,11 +119,22 @@ const typeDefinition: Parser<TokenKind, TypeDefinition> = apply(
     tok(TokenKind.RBrace)
   ),
   ([_type, name, path, _lbrace, body, _rbrace]) => {
+    const imps: ImportStatement[] = [];
+    const nodes: NodeDefinition[] = [];
+
+    for (const statement of body) {
+      if (statement.type === 'import') {
+        imps.push(statement);
+      } else {
+        nodes.push(statement);
+      }
+    }
     return {
       type: 'type',
       name: name.text,
       path: path ? path[1].text : null,
-      body
+      imports: imps,
+      nodes
     };
   }
 );
