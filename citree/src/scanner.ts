@@ -20,11 +20,11 @@ export enum TokenKind {
 }
 
 export const scanner = buildLexer([
-  [true, /^import(?![a-zA-Z_\-\/.])/g, TokenKind.Import],
-  [true, /^from(?![a-zA-Z_\-\/.])/g, TokenKind.From],
-  [true, /^type(?![a-zA-Z_\-\/.])/g, TokenKind.Type],
-  [true, /^in(?![a-zA-Z_\-\/.])/g, TokenKind.In],
-  [true, /^as(?![a-zA-Z_\-\/.])/g, TokenKind.As],
+  [true, /^import(?![a-zA-Z_\-/.])/g, TokenKind.Import],
+  [true, /^from(?![a-zA-Z_\-/.])/g, TokenKind.From],
+  [true, /^type(?![a-zA-Z_\-/.])/g, TokenKind.Type],
+  [true, /^in(?![a-zA-Z_\-/.])/g, TokenKind.In],
+  [true, /^as(?![a-zA-Z_\-/.])/g, TokenKind.As],
   [true, /^{/g, TokenKind.LBrace],
   [true, /^}/g, TokenKind.RBrace],
   [true, /^\*/g, TokenKind.Asterisk],
