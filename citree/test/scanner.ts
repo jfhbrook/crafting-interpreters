@@ -84,7 +84,7 @@ for (const [kind, text] of SIMPLE) {
 }
 
 t.test("it scans a full example", async (assert) => {
-  let token: any = scanner.parse(EXAMPLE);
+  let token = scanner.parse(EXAMPLE) as Token<TokenKind>;
 
   const results = [[token.kind, token.text]];
   while (token.next) {

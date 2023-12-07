@@ -1,10 +1,12 @@
-import * as path from "path";
+// import * as path from "path";
 
 import { Spec } from "./parser";
 
+/*
 function resolvePath(inputFile: string, outputFile: string): string {
   return path.relative(path.dirname(inputFile), outputFile);
 }
+*/
 
 type ImportStatement = string;
 type TypeName = string;

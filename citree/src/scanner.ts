@@ -30,6 +30,7 @@ export const scanner = buildLexer([
   [true, /^\*/g, TokenKind.Asterisk],
   [true, /^"([^"\\]|\\.)*"/g, TokenKind.Path],
   [true, /^'([^'\\]|\\.)*'/g, TokenKind.Path],
+  // eslint-disable-next-line no-useless-escape
   [true, /^[a-zA-Z0-9_\[\]]+/g, TokenKind.Ident],
   [true, /^=>/g, TokenKind.HasFields],
   [true, /^:/g, TokenKind.OfType],
