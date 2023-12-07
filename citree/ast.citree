@@ -1,7 +1,8 @@
 // Expressions
 
-type Expr in "./expr" {
-  import { Token } from './token'
+import { Token } from './token'
+
+type Expr in './expr' {
   import { Value } from './value'
 
   Assign   => name: Token, value: Expr
@@ -16,8 +17,7 @@ type Expr in "./expr" {
 
 // Statements
 
-type Stmt in "./stmt" {
-  import { Token } from './token'
+type Stmt in './stmt' {
   import { Expr } from './expr'
 
   Block      => statements: Stmt[]

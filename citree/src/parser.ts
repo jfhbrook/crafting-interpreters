@@ -2,14 +2,27 @@ import { alt, apply, list_sc, opt, Parser, rep, seq, tok } from 'typescript-pars
 import { TokenKind } from './scanner';
 
 type ImportStatement = {
+  type: "import",
   import: string
 };
 
 type NodeDefinition = {
-  node: string,
+  type: "node",
+  name: string,
   fields: string
 };
 
+type TypeDefinition = {
+  type: "type",
+  name: string,
+  path: string | null,
+  body: Array<ImportStatement | NodeDefinition>
+};
+
+type Spec = {
+  imports: ImportStatement[],
+  types: TypeDefinition[]
+};
 
 const importStatement: Parser<TokenKind, ImportStatement> = apply(
   seq(
@@ -39,6 +52,7 @@ const importStatement: Parser<TokenKind, ImportStatement> = apply(
   ),
   ([_import, target, _from, path]) => {
     return {
+      type: 'import',
       import: `import ${target} from ${path.text};`
     };
   }
@@ -66,7 +80,8 @@ const nodeDefinition: Parser<TokenKind, NodeDefinition> = apply(
   ),
   ([name, _hasFields, fields]) => {
     return {
-      node: name.text,
+      type: 'node',
+      name: name.text,
       fields: fields.join(', ')
     };
   }
@@ -78,12 +93,6 @@ const typeBody = rep(
     nodeDefinition
   )
 );
-
-type TypeDefinition = {
-  type: string,
-  path: string | null,
-  body: Array<ImportStatement | NodeDefinition>
-};
 
 const typeDefinition: Parser<TokenKind, TypeDefinition> = apply(
   seq(
@@ -101,11 +110,30 @@ const typeDefinition: Parser<TokenKind, TypeDefinition> = apply(
   ),
   ([_type, name, path, _lbrace, body, _rbrace]) => {
     return {
-      type: name.text,
+      type: 'type',
+      name: name.text,
       path: path ? path[1].text : null,
       body
     };
   }
 );
 
-export const parser: Parser<TokenKind, TypeDefinition[]> = rep(typeDefinition);
+export const parser: Parser<TokenKind, Spec> = apply(
+  rep(alt(importStatement, typeDefinition)),
+  (statements) => {
+    const spec: Spec = {
+      imports: [],
+      types: []
+    };
+
+    for (const statement of statements) {
+      if (statement.type === 'import') {
+        spec.imports.push(statement);
+      } else {
+        spec.types.push(statement);
+      }
+    }
+
+    return spec;
+  }
+);

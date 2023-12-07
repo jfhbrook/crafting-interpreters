@@ -7,24 +7,30 @@ import { parser } from '../src/parser';
 
 const EXAMPLE = `// example
 
+import { Token } from './token'
+
 type Expr in "./expr" {
-  import { Token } from './token'
   import * from "./value"
 
   Assign   => name: Token, value: Expr | null
   Call     => args: Expr[]
 }`
 
-const EXPECT = [{
-  type: 'Expr',
-  path: '"./expr"',
-  body: [
-    { import: "import { Token } from './token';" },
-    { import: 'import * from "./value";' },
-    { node: 'Assign', fields: 'name: Token, value: Expr | null' },
-    { node: 'Call', fields: 'args: Expr[]' }
-  ]
-}];
+const EXPECT = {
+  imports: [
+    { type: 'import', import: "import { Token } from './token';" },
+  ],
+  types: [{
+    type: 'type',
+    name: 'Expr',
+    path: '"./expr"',
+    body: [
+      { type: 'import', import: 'import * from "./value";' },
+      { type: 'node', name: 'Assign', fields: 'name: Token, value: Expr | null' },
+      { type: 'node', name: 'Call', fields: 'args: Expr[]' }
+    ]
+  }]
+};
 
 t.test('it parses a simple example', async t => {
   const result = expectSingleResult(expectEOF(parser.parse(scanner.parse(EXAMPLE))));
