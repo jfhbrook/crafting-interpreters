@@ -1,22 +1,22 @@
-import { buildLexer } from 'typescript-parsec';
+import { buildLexer } from "typescript-parsec";
 
 export enum TokenKind {
-  Import='import',
-  From='from',
-  LBrace='{',
-  RBrace='}',
-  Asterisk='*',
-  As='as',
-  Path='path',
-  Type='type',
-  In='in',
-  HasFields='=>',
-  OfType=':',
-  Ident='<ident>',
-  Union='|',
-  Comma=',',
-  Comment='<comment>',
-  Whitespace='<whitespace>'
+  Import = "import",
+  From = "from",
+  LBrace = "{",
+  RBrace = "}",
+  Asterisk = "*",
+  As = "as",
+  Path = "path",
+  Type = "type",
+  In = "in",
+  HasFields = "=>",
+  OfType = ":",
+  Ident = "<ident>",
+  Union = "|",
+  Comma = ",",
+  Comment = "<comment>",
+  Whitespace = "<whitespace>",
 }
 
 export const scanner = buildLexer([
@@ -36,5 +36,5 @@ export const scanner = buildLexer([
   [true, /^\|/g, TokenKind.Union],
   [true, /^,/g, TokenKind.Comma],
   [false, /^[/][/][^\n]*\n/g, TokenKind.Comment],
-  [false, /^\s+/g, TokenKind.Whitespace]
+  [false, /^\s+/g, TokenKind.Whitespace],
 ]);

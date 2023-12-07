@@ -1,9 +1,9 @@
-import t from 'tap';
+import t from "tap";
 
-import { expectEOF, expectSingleResult } from 'typescript-parsec';
+import { expectEOF, expectSingleResult } from "typescript-parsec";
 
-import { scanner } from '../src/scanner';
-import { parser } from '../src/parser';
+import { scanner } from "../src/scanner";
+import { parser } from "../src/parser";
 
 const EXAMPLE = `// example
 
@@ -14,27 +14,43 @@ type Expr in "./expr" {
 
   Assign   => name: Token, value: Expr | null
   Call     => args: Expr[]
-}`
+}`;
 
 const EXPECT = {
   imports: [
-    { type: 'import', statement: 'import { Token } from "./token";', path: './token' },
+    {
+      type: "import",
+      statement: 'import { Token } from "./token";',
+      path: "./token",
+    },
   ],
-  types: [{
-    type: 'type',
-    name: 'Expr',
-    path: '"./expr"',
-    imports: [
-      { type: 'import', statement: 'import * from "./value";', path: './value' },
-    ],
-    nodes: [
-      { type: 'node', name: 'Assign', fields: 'name: Token, value: Expr | null' },
-      { type: 'node', name: 'Call', fields: 'args: Expr[]' }
-    ]
-  }]
+  types: [
+    {
+      type: "type",
+      name: "Expr",
+      path: '"./expr"',
+      imports: [
+        {
+          type: "import",
+          statement: 'import * from "./value";',
+          path: "./value",
+        },
+      ],
+      nodes: [
+        {
+          type: "node",
+          name: "Assign",
+          fields: "name: Token, value: Expr | null",
+        },
+        { type: "node", name: "Call", fields: "args: Expr[]" },
+      ],
+    },
+  ],
 };
 
-t.test('it parses a simple example', async t => {
-  const result = expectSingleResult(expectEOF(parser.parse(scanner.parse(EXAMPLE))));
+t.test("it parses a simple example", async (t) => {
+  const result = expectSingleResult(
+    expectEOF(parser.parse(scanner.parse(EXAMPLE))),
+  );
   t.same(result, EXPECT);
 });

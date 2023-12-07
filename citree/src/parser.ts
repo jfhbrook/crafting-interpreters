@@ -1,29 +1,38 @@
-import { alt, apply, list_sc, opt, Parser, rep, seq, tok } from 'typescript-parsec';
-import { TokenKind } from './scanner';
+import {
+  alt,
+  apply,
+  list_sc,
+  opt,
+  Parser,
+  rep,
+  seq,
+  tok,
+} from "typescript-parsec";
+import { TokenKind } from "./scanner";
 
 export type ImportStatement = {
-  type: "import",
-  statement: string,
-  path: string
+  type: "import";
+  statement: string;
+  path: string;
 };
 
 export type NodeDefinition = {
-  type: "node",
-  name: string,
-  fields: string
+  type: "node";
+  name: string;
+  fields: string;
 };
 
 export type TypeDefinition = {
-  type: "type",
-  name: string,
-  path: string | null,
-  imports: ImportStatement[],
-  nodes: NodeDefinition[]
+  type: "type";
+  name: string;
+  path: string | null;
+  imports: ImportStatement[];
+  nodes: NodeDefinition[];
 };
 
 export type Spec = {
-  imports: ImportStatement[],
-  types: TypeDefinition[]
+  imports: ImportStatement[];
+  types: TypeDefinition[];
 };
 
 const importStatement: Parser<TokenKind, ImportStatement> = apply(
@@ -31,26 +40,23 @@ const importStatement: Parser<TokenKind, ImportStatement> = apply(
     tok(TokenKind.Import),
     alt(
       apply(
-        seq(
-          tok(TokenKind.Asterisk),
-          tok(TokenKind.As),
-          tok(TokenKind.Ident)
-        ),
-        ([_asterisk, _as, ident]) => `* as ${ident.text}`
+        seq(tok(TokenKind.Asterisk), tok(TokenKind.As), tok(TokenKind.Ident)),
+        ([_asterisk, _as, ident]) => `* as ${ident.text}`,
       ),
-      apply(tok(TokenKind.Asterisk), (_) => '*'),
+      apply(tok(TokenKind.Asterisk), (_) => "*"),
       apply(tok(TokenKind.Ident), (ident) => ident.text),
       apply(
         seq(
           tok(TokenKind.LBrace),
           list_sc(tok(TokenKind.Ident), tok(TokenKind.Comma)),
-          tok(TokenKind.RBrace)
+          tok(TokenKind.RBrace),
         ),
-        ([_lbrace, idents, _rbrace]) => `{ ${idents.map(i => i.text).join(', ')} }`
-      )
+        ([_lbrace, idents, _rbrace]) =>
+          `{ ${idents.map((i) => i.text).join(", ")} }`,
+      ),
     ),
     tok(TokenKind.From),
-    tok(TokenKind.Path)
+    tok(TokenKind.Path),
   ),
   ([_import, target, _from, pathToken]) => {
     let path = pathToken.text;
@@ -61,82 +67,68 @@ const importStatement: Parser<TokenKind, ImportStatement> = apply(
     }
     path = JSON.parse(path);
     return {
-      type: 'import',
+      type: "import",
       statement: `import ${target} from ${JSON.stringify(path)};`,
-      path
+      path,
     };
-  }
+  },
 );
 
 const fieldDefinition = apply(
   seq(
     tok(TokenKind.Ident),
     tok(TokenKind.OfType),
-    rep(
-      alt(
-        tok(TokenKind.Ident),
-        tok(TokenKind.Union)
-      )
-    )
+    rep(alt(tok(TokenKind.Ident), tok(TokenKind.Union))),
   ),
-  ([ident, _ofType, type]) => `${ident.text}: ${type.map(t => t.text).join(' ')}`
+  ([ident, _ofType, type]) =>
+    `${ident.text}: ${type.map((t) => t.text).join(" ")}`,
 );
 
 const nodeDefinition: Parser<TokenKind, NodeDefinition> = apply(
   seq(
     tok(TokenKind.Ident),
     tok(TokenKind.HasFields),
-    list_sc(fieldDefinition, tok(TokenKind.Comma))
+    list_sc(fieldDefinition, tok(TokenKind.Comma)),
   ),
   ([name, _hasFields, fields]) => {
     return {
-      type: 'node',
+      type: "node",
       name: name.text,
-      fields: fields.join(', ')
+      fields: fields.join(", "),
     };
-  }
+  },
 );
 
-const typeBody = rep(
-  alt(
-    importStatement,
-    nodeDefinition
-  )
-);
+const typeBody = rep(alt(importStatement, nodeDefinition));
 
 const typeDefinition: Parser<TokenKind, TypeDefinition> = apply(
   seq(
     tok(TokenKind.Type),
     tok(TokenKind.Ident),
-    opt(
-      seq(
-        tok(TokenKind.In),
-        tok(TokenKind.Path)
-      )
-    ),
+    opt(seq(tok(TokenKind.In), tok(TokenKind.Path))),
     tok(TokenKind.LBrace),
     typeBody,
-    tok(TokenKind.RBrace)
+    tok(TokenKind.RBrace),
   ),
   ([_type, name, path, _lbrace, body, _rbrace]) => {
     const imps: ImportStatement[] = [];
     const nodes: NodeDefinition[] = [];
 
     for (const statement of body) {
-      if (statement.type === 'import') {
+      if (statement.type === "import") {
         imps.push(statement);
       } else {
         nodes.push(statement);
       }
     }
     return {
-      type: 'type',
+      type: "type",
       name: name.text,
       path: path ? path[1].text : null,
       imports: imps,
-      nodes
+      nodes,
     };
-  }
+  },
 );
 
 export const parser: Parser<TokenKind, Spec> = apply(
@@ -144,11 +136,11 @@ export const parser: Parser<TokenKind, Spec> = apply(
   (statements) => {
     const spec: Spec = {
       imports: [],
-      types: []
+      types: [],
     };
 
     for (const statement of statements) {
-      if (statement.type === 'import') {
+      if (statement.type === "import") {
         spec.imports.push(statement);
       } else {
         spec.types.push(statement);
@@ -156,5 +148,5 @@ export const parser: Parser<TokenKind, Spec> = apply(
     }
 
     return spec;
-  }
+  },
 );

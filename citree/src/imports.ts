@@ -1,6 +1,6 @@
-import * as path from 'path';
+import * as path from "path";
 
-import { Spec } from './parser';
+import { Spec } from "./parser";
 
 function resolvePath(inputFile: string, outputFile: string): string {
   return path.relative(path.dirname(inputFile), outputFile);
@@ -17,7 +17,9 @@ export function resolveImports(spec: Spec): Imports {
   const imps: Imports = {};
 
   for (const type of spec.types) {
-    imps[type.name] = spec.imports.map(i => i.statement).concat(type.imports.map(i => i.statement));
+    imps[type.name] = spec.imports
+      .map((i) => i.statement)
+      .concat(type.imports.map((i) => i.statement));
   }
 
   return imps;
