@@ -2,7 +2,12 @@
 
 A mini language for generating ASTs, inspired by Crafting Interpers by Robert Nystrom.
 
-# TODO
+## Usage
 
-- templates/partials for generated files
-- actual logic for generated files
+First, make an AST definition file like `./ast.citree`. Then run:
+
+```
+citree ./ast.citree
+```
+
+that will output the specified typescript files.
