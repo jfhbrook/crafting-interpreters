@@ -1,7 +1,9 @@
+import { spawn } from 'child_process';
 import { readFile, writeFile } from "fs/promises";
 
 import { expectEOF, expectSingleResult } from "typescript-parsec";
 import minimist from "minimist";
+import which from "which";
 
 import { scanner } from "./scanner";
 import { parser } from "./parser";
@@ -35,6 +37,19 @@ export default async function main() {
         types: Object.entries(ts).map(([_, t]): TypeConfig => t),
       }),
     );
+  }
+
+  if (await which('prettier')) {
+    await Promise.all(Object.keys(types).map(path => new Promise<void>((resolve, reject) => {
+      const format = spawn('prettier', [path, '--write'], {stdio: 'pipe'});
+      format.on('exit', (code) => {
+        if (code) {
+          reject(new Error(`prettier '${path}' --write exited with code ${code}`));
+          return;
+        }
+        resolve();
+      });
+    })));
   }
 }
 
