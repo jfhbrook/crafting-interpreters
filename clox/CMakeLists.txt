@@ -19,13 +19,16 @@ add_library(debug_ src/debug.c)
 target_link_libraries(debug_ PRIVATE memory)
 target_link_libraries(debug_ PRIVATE value)
 
+add_library(scanner src/scanner.c)
+
+add_library(compiler src/compiler.c)
+target_link_libraries(compiler PRIVATE scanner)
+
 add_library(vm src/vm.c)
+target_link_libraries(vm PRIVATE compiler)
 target_link_libraries(vm PRIVATE debug_)
-target_link_libraries(vm PRIVATE chunk)
-target_link_libraries(vm PRIVATE value)
 
 add_executable(clox src/main.c)
 set_target_properties(clox PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
 target_link_libraries(clox PRIVATE chunk)
-# target_link_libraries(clox PRIVATE debug_)
 target_link_libraries(clox PRIVATE vm)
