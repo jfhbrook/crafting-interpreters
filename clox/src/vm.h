@@ -1,5 +1,5 @@
 #ifndef clox_vm_h
-#define clox_vm_H
+#define clox_vm_h
 
 #include "chunk.h"
 #include "value.h"

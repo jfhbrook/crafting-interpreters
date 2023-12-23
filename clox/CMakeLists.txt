@@ -23,10 +23,13 @@ add_library(scanner src/scanner.c)
 
 add_library(compiler src/compiler.c)
 target_link_libraries(compiler PRIVATE scanner)
+# TODO: How to switch on config def? Can we do that?
+target_link_libraries(compiler PRIVATE debug_)
 
 add_library(vm src/vm.c)
 target_link_libraries(vm PRIVATE compiler)
 target_link_libraries(vm PRIVATE debug_)
+target_link_libraries(vm PRIVATE chunk)
 
 add_executable(clox src/main.c)
 set_target_properties(clox PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
