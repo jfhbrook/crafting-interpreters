@@ -10,6 +10,9 @@ add_library(memory src/memory.c)
 
 add_library(value src/value.c)
 target_link_libraries(value PRIVATE memory)
+target_link_libraries(value PRIVATE object)
+
+add_library(object src/object.c)
 
 add_library(chunk src/chunk.c)
 target_link_libraries(chunk PRIVATE memory)
