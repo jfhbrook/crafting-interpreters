@@ -12,6 +12,7 @@ typedef struct {
   uint8_t* ip;
   Value stack[STACK_MAX];
   Value* stackTop;
+  Table globals;
   // Remember how MSX BASIC has a "strings" area in memory?
   Table strings;
   Obj* objects;
