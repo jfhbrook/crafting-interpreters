@@ -21,15 +21,15 @@ typedef struct {
 // From lowest to highest. Depends on C assigning these numbers in order.
 typedef enum {
   PREC_NONE,
-  PREC_ASSIGNMENT,  // =
-  PREC_OR,          // or
-  PREC_AND,         // and
-  PREC_EQUALITY,    // == !=
-  PREC_COMPARISON,  // < > <= >=
-  PREC_TERM,        // + -
-  PREC_FACTOR,      // * /
-  PREC_UNARY,       // ! -
-  PREC_CALL,        // . ()
+  PREC_ASSIGNMENT, // =
+  PREC_OR,         // or
+  PREC_AND,        // and
+  PREC_EQUALITY,   // == !=
+  PREC_COMPARISON, // < > <= >=
+  PREC_TERM,       // + -
+  PREC_FACTOR,     // * /
+  PREC_UNARY,      // ! -
+  PREC_CALL,       // . ()
   PREC_PRIMARY
 } Precedence;
 
@@ -60,7 +60,8 @@ Chunk *compilingChunk;
 static Chunk *currentChunk() { return compilingChunk; }
 
 static void errorAt(Token *token, const char *message) {
-  if (parser.panicMode) return;
+  if (parser.panicMode)
+    return;
   parser.panicMode = true;
   fprintf(stderr, "[line %d] Error", token->line);
 
@@ -87,7 +88,8 @@ static void advance() {
 
   for (;;) {
     parser.current = scanToken();
-    if (parser.current.type != TOKEN_ERROR) break;
+    if (parser.current.type != TOKEN_ERROR)
+      break;
 
     errorAtCurrent(parser.current.start);
   }
@@ -105,7 +107,8 @@ static void consume(TokenType type, const char *message) {
 static bool check(TokenType type) { return parser.current.type == type; }
 
 static bool match(TokenType type) {
-  if (!check(type)) return false;
+  if (!check(type))
+    return false;
   advance();
   return true;
 }
@@ -201,54 +204,54 @@ static void binary(bool canAssign) {
   parsePrecedence((Precedence)(rule->precedence + 1));
 
   switch (operatorType) {
-    case TOKEN_BANG_EQUAL:
-      emitBytes(OP_EQUAL, OP_NOT);
-      break;
-    case TOKEN_EQUAL_EQUAL:
-      emitByte(OP_EQUAL);
-      break;
-    case TOKEN_GREATER:
-      emitByte(OP_GREATER);
-      break;
-    case TOKEN_GREATER_EQUAL:
-      emitBytes(OP_LESS, OP_NOT);
-      break;
-    case TOKEN_LESS:
-      emitByte(OP_LESS);
-      break;
-    case TOKEN_LESS_EQUAL:
-      emitBytes(OP_GREATER, OP_NOT);
-      break;
-    case TOKEN_PLUS:
-      emitByte(OP_ADD);
-      break;
-    case TOKEN_MINUS:
-      emitByte(OP_SUBTRACT);
-      break;
-    case TOKEN_STAR:
-      emitByte(OP_MULTIPLY);
-      break;
-    case TOKEN_SLASH:
-      emitByte(OP_DIVIDE);
-      break;
-    default:
-      return;  // Unreachable.
+  case TOKEN_BANG_EQUAL:
+    emitBytes(OP_EQUAL, OP_NOT);
+    break;
+  case TOKEN_EQUAL_EQUAL:
+    emitByte(OP_EQUAL);
+    break;
+  case TOKEN_GREATER:
+    emitByte(OP_GREATER);
+    break;
+  case TOKEN_GREATER_EQUAL:
+    emitBytes(OP_LESS, OP_NOT);
+    break;
+  case TOKEN_LESS:
+    emitByte(OP_LESS);
+    break;
+  case TOKEN_LESS_EQUAL:
+    emitBytes(OP_GREATER, OP_NOT);
+    break;
+  case TOKEN_PLUS:
+    emitByte(OP_ADD);
+    break;
+  case TOKEN_MINUS:
+    emitByte(OP_SUBTRACT);
+    break;
+  case TOKEN_STAR:
+    emitByte(OP_MULTIPLY);
+    break;
+  case TOKEN_SLASH:
+    emitByte(OP_DIVIDE);
+    break;
+  default:
+    return; // Unreachable.
   }
 }
 
 static void literal(bool canAssign) {
   switch (parser.previous.type) {
-    case TOKEN_FALSE:
-      emitByte(OP_FALSE);
-      break;
-    case TOKEN_NIL:
-      emitByte(OP_NIL);
-      break;
-    case TOKEN_TRUE:
-      emitByte(OP_TRUE);
-      break;
-    default:
-      return;  // Unreachable.
+  case TOKEN_FALSE:
+    emitByte(OP_FALSE);
+    break;
+  case TOKEN_NIL:
+    emitByte(OP_NIL);
+    break;
+  case TOKEN_TRUE:
+    emitByte(OP_TRUE);
+    break;
+  default:
+    return; // Unreachable.
   }
 }
 
@@ -299,14 +302,14 @@ static void unary(bool canAssign) {
 
   // Emit the operator instruction.
   switch (operatorType) {
-    case TOKEN_BANG:
-      emitByte(OP_NOT);
-      break;
-    case TOKEN_MINUS:
-      emitByte(OP_NEGATE);
-      break;
-    default:
-      return;  // Unreachable.
+  case TOKEN_BANG:
+    emitByte(OP_NOT);
+    break;
+  case TOKEN_MINUS:
+    emitByte(OP_NEGATE);
+    break;
+  default:
+    return; // Unreachable.
   }
 }
 
@@ -385,7 +388,8 @@ static uint8_t identifierConstant(Token *name) {
 }
 
 static bool identifiersEqual(Token *a, Token *b) {
-  if (a->length != b->length) return false;
+  if (a->length != b->length)
+    return false;
   return memcmp(a->start, b->start, a->length) == 0;
 }
 
@@ -410,11 +414,12 @@ static void addLocal(Token name) {
   }
   Local *local = &current->locals[current->localCount++];
   local->name = name;
-  local->depth = -1;  // indicates declared but not initialized
+  local->depth = -1; // indicates declared but not initialized
 }
 
 static void declareVariable() {
-  if (current->scopeDepth == 0) return;
+  if (current->scopeDepth == 0)
+    return;
 
   Token *name = &parser.previous;
   for (int i = current->localCount - 1; i >= 0; i--) {
@@ -435,7 +440,8 @@ static uint8_t parseVariable(const char *errorMessage) {
   consume(TOKEN_IDENTIFIER, errorMessage);
 
   declareVariable();
-  if (current->scopeDepth > 0) return 0;
+  if (current->scopeDepth > 0)
+    return 0;
 
   return identifierConstant(&parser.previous);
 }
@@ -506,7 +512,8 @@ static void ifStatement() {
   emitByte(OP_POP);
 
   // emit the falsey part of the if
-  if (match(TOKEN_ELSE)) statement();
+  if (match(TOKEN_ELSE))
+    statement();
   // we now the offset for jumping past the else (this is 0 if no else block)
   patchJump(elseJump);
 }
@@ -521,18 +528,19 @@ static void synchronize() {
   parser.panicMode = false;
 
   while (parser.current.type != TOKEN_EOF) {
-    if (parser.previous.type == TOKEN_SEMICOLON) return;
+    if (parser.previous.type == TOKEN_SEMICOLON)
+      return;
     switch (parser.current.type) {
-      case TOKEN_CLASS:
-      case TOKEN_FUN:
-      case TOKEN_VAR:
-      case TOKEN_FOR:
-      case TOKEN_IF:
-      case TOKEN_WHILE:
-      case TOKEN_PRINT:
-      case TOKEN_RETURN:
-        return;
-      default:;  // Do nothing.
+    case TOKEN_CLASS:
+    case TOKEN_FUN:
+    case TOKEN_VAR:
+    case TOKEN_FOR:
+    case TOKEN_IF:
+    case TOKEN_WHILE:
+    case TOKEN_PRINT:
+    case TOKEN_RETURN:
+      return;
+    default:; // Do nothing.
     }
 
     advance();
@@ -546,7 +554,8 @@ static void declaration() {
     statement();
   }
 
-  if (parser.panicMode) synchronize();
+  if (parser.panicMode)
+    synchronize();
 }
 
 static void statement() {

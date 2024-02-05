@@ -9,7 +9,7 @@ build:
   cmake --build .
 
 format:
-  clang-format --style=google -i src/*
+  clang-format -i src/*
 
 clean:
   rm -f CMakeCache.txt

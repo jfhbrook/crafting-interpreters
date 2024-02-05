@@ -8,7 +8,7 @@
 #include "value.h"
 #include "vm.h"
 
-#define ALLOCATE_OBJ(type, objectType) \
+#define ALLOCATE_OBJ(type, objectType)                                         \
   (type *)allocateObject(sizeof(type), objectType)
 
 static Obj *allocateObject(size_t size, ObjType type) {
@@ -53,7 +53,8 @@ ObjString *takeString(char *chars, int length) {
 ObjString *copyString(const char *chars, int length) {
   uint32_t hash = hashString(chars, length);
   ObjString *interned = tableFindString(&vm.strings, chars, length, hash);
-  if (interned != NULL) return interned;
+  if (interned != NULL)
+    return interned;
   char *heapChars = ALLOCATE(char, length + 1);
   memcpy(heapChars, chars, length);
   heapChars[length] = '\0';
@@ -62,8 +63,8 @@ ObjString *copyString(const char *chars, int length) {
 
 void printObject(Value value) {
   switch (OBJ_TYPE(value)) {
-    case OBJ_STRING:
-      printf("%s", AS_CSTRING(value));
-      break;
+  case OBJ_STRING:
+    printf("%s", AS_CSTRING(value));
+    break;
   }
 }
