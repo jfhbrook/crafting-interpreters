@@ -265,6 +265,40 @@ static void number(bool canAssign) {
   emitConstant(NUMBER_VAL(value));
 }
 
+static void and_(bool canAssign) {
+  // if the previous expression output is false, we don't need to
+  // evaluate the second expression
+  int endJump = emitJump(OP_JUMP_IF_FALSE);
+
+  // we actually need the output of the next expression...
+  emitByte(OP_POP);
+  // parse the second expression
+  parsePrecedence(PREC_AND);
+
+  patchJump(endJump);
+  // if we jumped here, then the output of the first expression is
+  // what we're looking for
+}
+
+static void or_(bool canAssign) {
+  // if the previous expression is false, then we need to evaluate the
+  // next expression
+  int elseJump = emitJump(OP_JUMP_IF_FALSE);
+  // if the previous expression is true, then we know the whole thing
+  // is true
+  int endJump = emitJump(OP_JUMP);
+
+  // we just jumped the one expression on a falsey case
+  patchJump(elseJump);
+  // we don't need the previous expr value anymore
+  emitByte(OP_POP);
+
+  // do the next expression
+  parsePrecedence(PREC_OR);
+  // on the true case, we needed to jump past the prior expression
+  patchJump(endJump);
+}
+
 static void string(bool canAssign) {
   emitConstant(OBJ_VAL(
       copyString(parser.previous.start + 1, parser.previous.length - 2)));
@@ -337,7 +371,7 @@ ParseRule rules[] = {
     [TOKEN_IDENTIFIER] = {variable, NULL, PREC_NONE},
     [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
-    [TOKEN_AND] = {NULL, NULL, PREC_NONE},
+    [TOKEN_AND] = {NULL, and_, PREC_AND},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
     [TOKEN_FALSE] = {literal, NULL, PREC_NONE},
@@ -345,7 +379,7 @@ ParseRule rules[] = {
     [TOKEN_FUN] = {NULL, NULL, PREC_NONE},
     [TOKEN_IF] = {NULL, NULL, PREC_NONE},
     [TOKEN_NIL] = {literal, NULL, PREC_NONE},
-    [TOKEN_OR] = {NULL, NULL, PREC_NONE},
+    [TOKEN_OR] = {NULL, or_, PREC_OR},
     [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},
     [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
     [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
