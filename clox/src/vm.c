@@ -213,6 +213,11 @@ static InterpretResult run() {
         vm.ip += offset;
       break;
     }
+    case OP_LOOP: {
+      uint16_t offset = READ_SHORT();
+      vm.ip -= offset;
+      break;
+    }
     // TODO: Book says to delete this, but deleting it causes the VM to
     // lock up. My guess is that I missed a step somewhere.
     case OP_RETURN:
