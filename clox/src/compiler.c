@@ -119,6 +119,15 @@ static void emitBytes(uint8_t byte1, uint8_t byte2) {
   emitByte(byte2);
 }
 
+static int emitJump(uint8_t instruction) {
+  emitByte(instruction);
+  // jump offset is 16 bits, not 8
+  // TODO: Why do we jump the max instead of 0?
+  emitByte(0xff);
+  emitByte(0xff);
+  return currentChunk()->count - 2;
+}
+
 static void emitReturn() { emitByte(OP_RETURN); }
 
 static uint8_t makeConstant(Value value) {
@@ -133,6 +142,18 @@ static uint8_t makeConstant(Value value) {
 
 static void emitConstant(Value value) {
   emitBytes(OP_CONSTANT, makeConstant(value));
+}
+
+static void patchJump(int offset) {
+  // -2 to adjust for the bytecode for the jump offset itself.
+  int jump = currentChunk()->count - offset - 2;
+
+  if (jump > UINT16_MAX) {
+    error("Too much code to jump over.");
+  }
+
+  currentChunk()->code[offset] = (jump >> 8) & 0xff;
+  currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
 static void initCompiler(Compiler *compiler) {
@@ -462,6 +483,34 @@ static void expressionStatement() {
   emitByte(OP_POP);
 }
 
+static void ifStatement() {
+  consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+  expression();
+  consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
+  // if false, stub jumping to the end of the if
+  int thenJump = emitJump(OP_JUMP_IF_FALSE);
+  // we start the truthy part by popping the conditional
+  emitByte(OP_POP);
+  // emit the truthy part of the if
+  statement();
+
+  // at the end of the 'if' block, stub jumping past
+  // the else
+  int elseJump = emitJump(OP_JUMP);
+
+  // then jump needs to point to the start of the else block (if there is
+  // one)
+  patchJump(thenJump);
+  // we didn't run the truthy leg so we still need to pop the conditional
+  emitByte(OP_POP);
+
+  // emit the falsey part of the if
+  if (match(TOKEN_ELSE)) statement();
+  // we now the offset for jumping past the else (this is 0 if no else block)
+  patchJump(elseJump);
+}
+
 static void printStatement() {
   expression();
   consume(TOKEN_SEMICOLON, "Expect ';' after value.");
@@ -503,6 +552,8 @@ static void declaration() {
 static void statement() {
   if (match(TOKEN_PRINT)) {
     printStatement();
+  } else if (match(TOKEN_IF)) {
+    ifStatement();
   } else if (match(TOKEN_LEFT_BRACE)) {
     beginScope();
     block();

@@ -1,7 +1,7 @@
 set dotenv-load := true
 
 start *ARGS: build
-  ./bin/clox {{ARGS}}
+  rlwrap ./bin/clox {{ARGS}}
 
 build:
   if [ ! -f CMakeCache.txt ]; then cmake .; fi
