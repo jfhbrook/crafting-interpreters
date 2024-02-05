@@ -42,5 +42,4 @@ target_link_libraries(vm PRIVATE table)
 
 add_executable(clox src/main.c)
 set_target_properties(clox PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
-target_link_libraries(clox PRIVATE chunk)
 target_link_libraries(clox PRIVATE vm)
