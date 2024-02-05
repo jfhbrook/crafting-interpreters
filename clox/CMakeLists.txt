@@ -21,6 +21,7 @@ target_link_libraries(value PRIVATE memory)
 target_link_libraries(value PRIVATE object)
 
 add_library(object src/object.c)
+target_link_libraries(object PRIVATE chunk)
 target_link_libraries(object PRIVATE table)
 
 add_library(chunk src/chunk.c)
