@@ -1,10 +1,12 @@
 set dotenv-load := true
 
+CMAKE_BUILD_TYPE := env_var_or_default('CMAKE_BUILD_TYPE', 'Release')
+
 start *ARGS: build
   rlwrap ./bin/clox {{ARGS}}
 
 build:
-  if [ ! -f CMakeCache.txt ]; then cmake .; fi
+  cmake -DCMAKE_BUILD_TYPE={{CMAKE_BUILD_TYPE}} .
   mkdir -p bin
   cmake --build .
 
