@@ -8,6 +8,9 @@ build:
   mkdir -p bin
   cmake --build .
 
+format:
+  clang-format --style=google -i src/*
+
 clean:
   rm -f CMakeCache.txt
   rm -rf CMakeFiles

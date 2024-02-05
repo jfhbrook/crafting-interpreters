@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "common.h"
+
 #include "chunk.h"
+#include "common.h"
 #include "vm.h"
 
 static void repl() {
@@ -19,8 +20,8 @@ static void repl() {
   }
 }
 
-static char* readFile(const char* path) {
-  FILE* file = fopen(path, "rb");
+static char *readFile(const char *path) {
+  FILE *file = fopen(path, "rb");
   if (file == NULL) {
     fprintf(stderr, "Could not open file \"%s\".\n", path);
     exit(74);
@@ -30,7 +31,7 @@ static char* readFile(const char* path) {
   size_t fileSize = ftell(file);
   rewind(file);
 
-  char* buffer = (char*)malloc(fileSize + 1);
+  char *buffer = (char *)malloc(fileSize + 1);
   size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
   if (bytesRead < fileSize) {
     fprintf(stderr, "Could not read file \"%s\".\n", path);
@@ -43,8 +44,8 @@ static char* readFile(const char* path) {
   return buffer;
 }
 
-static void runFile(const char* path) {
-  char* source = readFile(path);
+static void runFile(const char *path) {
+  char *source = readFile(path);
   InterpretResult result = interpret(source);
   free(source);
 
@@ -52,7 +53,7 @@ static void runFile(const char* path) {
   if (result == INTERPRET_RUNTIME_ERROR) exit(70);
 }
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char *argv[]) {
   initVM();
 
   if (argc == 1) {
