@@ -1,7 +1,7 @@
 import * as expr from './expr';
 import * as stmt from './stmt';
 import { Token, TokenType } from './token';
-import { Value } from './value';
+import { Value, isCallable } from './value';
 import { Environment } from './environment';
 import { Fn } from './function';
 import { Class } from './class';
@@ -246,7 +246,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       args.push(this.evaluate(arg));
     }
 
-    if (!Fn.isFunction(callee)) {
+    if (!isCallable(callee)) {
       throw new RuntimeError(ex.paren, "Can only call functions and classes.");
     }
 

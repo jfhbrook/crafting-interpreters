@@ -5,10 +5,6 @@ import { Interpreter } from './interpreter';
 import { Return } from './error';
 
 export class Fn implements Callable {
-  static isFunction(fn: any): fn is Fn {
-    return typeof fn.call === 'function';
-  }
-
   constructor(
     private readonly declaration: stmt.Function,
     private readonly closure: Environment
