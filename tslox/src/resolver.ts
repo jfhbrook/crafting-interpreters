@@ -6,7 +6,7 @@ import { errors } from './error';
 
 enum FunctionType {
   None,
-  Function
+  Function,
 }
 
 // note this is doing "static" analysis, rather than stateful execution. that
@@ -33,9 +33,9 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   }
 
   // all the visitors basically do the work of "resolving"
-  public resolve(statements: stmt.Stmt[]): void
-  public resolve(statement: stmt.Stmt): void
-  public resolve(expr: expr.Expr): void
+  public resolve(statements: stmt.Stmt[]): void;
+  public resolve(statement: stmt.Stmt): void;
+  public resolve(expr: expr.Expr): void;
   public resolve(st: expr.Expr | stmt.Stmt | stmt.Stmt[]): void {
     if (st instanceof Array) {
       for (let statement of st) {
@@ -76,7 +76,7 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
 
     const scope = this.scopes[this.scopes.length - 1];
     if (typeof scope[name.lexeme] !== 'undefined') {
-      errors.error(name, "Already a varable with this name in this scope.");
+      errors.error(name, 'Already a varable with this name in this scope.');
     }
 
     scope[name.lexeme] = false;
@@ -92,8 +92,14 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   // assuming the variable definition doesn't reference itself, resolve the
   // local variable
   visitVariableExpr(ex: expr.Variable) {
-    if (this.scopes.length && this.scopes[this.scopes.length - 1][ex.name.lexeme] === false) {
-      errors.error(ex.name, "Can't read local variable in its own initializer.");
+    if (
+      this.scopes.length &&
+      this.scopes[this.scopes.length - 1][ex.name.lexeme] === false
+    ) {
+      errors.error(
+        ex.name,
+        "Can't read local variable in its own initializer.",
+      );
     }
 
     this.resolveLocal(ex, ex.name);
@@ -194,8 +200,7 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     this.resolve(ex.expression);
   }
 
-  visitLiteralExpr(_: expr.Literal): void {
-  }
+  visitLiteralExpr(_: expr.Literal): void {}
 
   visitLogicalExpr(ex: expr.Logical): void {
     this.resolve(ex.left);

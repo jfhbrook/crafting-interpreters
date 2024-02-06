@@ -5,11 +5,13 @@ import * as stmt from './stmt';
 
 export interface Callable {
   call(interpreter: Interpreter, args: Value[]): Value;
-  arity(): number
+  arity(): number;
 }
 
 export function isCallable(callable: any): callable is Callable {
-  return typeof callable.call === 'function' && typeof callable.arity === 'function';
+  return (
+    typeof callable.call === 'function' && typeof callable.arity === 'function'
+  );
 }
 
 export interface Instance {

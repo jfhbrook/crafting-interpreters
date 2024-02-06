@@ -7,7 +7,7 @@ import { Return } from './error';
 export class Fn implements Callable {
   constructor(
     private readonly declaration: stmt.Function,
-    private readonly closure: Environment
+    private readonly closure: Environment,
   ) {}
 
   arity(): number {

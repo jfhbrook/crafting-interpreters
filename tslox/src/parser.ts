@@ -49,7 +49,7 @@ export class Parser {
   private advance(): Token {
     if (!this.isAtEnd()) {
       this.current++;
-      debug(`advance to ${this.current} (${this.peek()})`)
+      debug(`advance to ${this.current} (${this.peek()})`);
     }
     return this.previous();
   }
@@ -111,7 +111,7 @@ export class Parser {
   private declaration(): stmt.Stmt | null {
     try {
       if (this.match(TokenType.Class)) return this.classDeclaration();
-      if (this.match(TokenType.Fun)) return this.function("function");
+      if (this.match(TokenType.Fun)) return this.function('function');
       if (this.match(TokenType.Var)) return this.varDeclaration();
 
       return this.statement();
@@ -126,13 +126,16 @@ export class Parser {
   }
 
   private classDeclaration(): stmt.Stmt {
-    const name: Token = this.consume(TokenType.Identifier, "Expect class name.");
+    const name: Token = this.consume(
+      TokenType.Identifier,
+      'Expect class name.',
+    );
     this.consume(TokenType.LeftBrace, "Expect '{' before class body.");
 
     const methods: stmt.Function[] = [];
 
     while (!this.check(TokenType.RightBrace) && !this.isAtEnd()) {
-      methods.push(this.function("method"));
+      methods.push(this.function('method'));
     }
 
     this.consume(TokenType.RightBrace, "Expect '}' after class body.");
@@ -140,16 +143,21 @@ export class Parser {
     return new stmt.Class(name, methods);
   }
 
-
   private varDeclaration(): stmt.Stmt {
-    const name: Token = this.consume(TokenType.Identifier, "Expect variable name.");
+    const name: Token = this.consume(
+      TokenType.Identifier,
+      'Expect variable name.',
+    );
 
     let initializer: expr.Expr | null = null;
     if (this.match(TokenType.Equal)) {
       initializer = this.expression();
     }
 
-    this.consume(TokenType.Semicolon, "Expect ';' after variable name declaration.");
+    this.consume(
+      TokenType.Semicolon,
+      "Expect ';' after variable name declaration.",
+    );
     return new stmt.Var(name, initializer);
   }
 
@@ -195,7 +203,7 @@ export class Parser {
     body = new stmt.While(condition, body);
 
     if (initializer) {
-      body = new stmt.Block([ initializer, body ]);
+      body = new stmt.Block([initializer, body]);
     }
 
     return body;
@@ -260,7 +268,10 @@ export class Parser {
   }
 
   private function(kind: string): stmt.Function {
-    const name: Token = this.consume(TokenType.Identifier,  `Expect ${kind} name.`);
+    const name: Token = this.consume(
+      TokenType.Identifier,
+      `Expect ${kind} name.`,
+    );
     this.consume(TokenType.LeftParen, `Expect '(' after ${kind} name.`);
     const parameters: Token[] = [];
     if (!this.check(TokenType.RightParen)) {
@@ -269,7 +280,9 @@ export class Parser {
           errors.error(this.peek(), "Can't have more than 255 parameters.");
         }
 
-        parameters.push(this.consume(TokenType.Identifier, "Expect parameter name."));
+        parameters.push(
+          this.consume(TokenType.Identifier, 'Expect parameter name.'),
+        );
       } while (this.match(TokenType.Comma));
     }
     this.consume(TokenType.RightParen, "Expect ')' after parameters.");
@@ -303,7 +316,7 @@ export class Parser {
         return new expr.Assign(name, value);
       }
 
-      errors.error(equals, "Invalid assignment type.");
+      errors.error(equals, 'Invalid assignment type.');
     }
 
     // note, if the next token *isn't* an assignment operator, then we just
@@ -345,44 +358,43 @@ export class Parser {
   }
 
   private or() {
-    return this.logicalOperator(
-      [TokenType.Or],
-      this.and.bind(this)
-    );
+    return this.logicalOperator([TokenType.Or], this.and.bind(this));
   }
 
   private and() {
-    return this.logicalOperator(
-      [TokenType.And],
-      this.equality.bind(this)
-    );
+    return this.logicalOperator([TokenType.And], this.equality.bind(this));
   }
 
   private equality(): expr.Expr {
     return this.binaryOperator(
       [TokenType.BangEqual, TokenType.EqualEqual],
-      this.comparison.bind(this)
+      this.comparison.bind(this),
     );
   }
 
   private comparison(): expr.Expr {
     return this.binaryOperator(
-      [TokenType.Greater, TokenType.GreaterEqual, TokenType.Less, TokenType.LessEqual],
-      this.term.bind(this)
+      [
+        TokenType.Greater,
+        TokenType.GreaterEqual,
+        TokenType.Less,
+        TokenType.LessEqual,
+      ],
+      this.term.bind(this),
     );
   }
 
   private term(): expr.Expr {
     return this.binaryOperator(
       [TokenType.Minus, TokenType.Plus],
-      this.factor.bind(this)
+      this.factor.bind(this),
     );
   }
 
   private factor(): expr.Expr {
     return this.binaryOperator(
       [TokenType.Slash, TokenType.Star],
-      this.unary.bind(this)
+      this.unary.bind(this),
     );
   }
 
@@ -404,7 +416,10 @@ export class Parser {
       if (this.match(TokenType.LeftParen)) {
         ex = this.finishCall(ex);
       } else if (this.match(TokenType.Dot)) {
-        const name: Token = this.consume(TokenType.Identifier, "Expect property name after '.'.");
+        const name: Token = this.consume(
+          TokenType.Identifier,
+          "Expect property name after '.'.",
+        );
         ex = new expr.Get(ex, name);
       } else {
         break;
@@ -425,7 +440,10 @@ export class Parser {
       } while (this.match(TokenType.Comma));
     }
 
-    const paren = this.consume(TokenType.RightParen, "Expect ')' after arguments.");
+    const paren = this.consume(
+      TokenType.RightParen,
+      "Expect ')' after arguments.",
+    );
 
     return new expr.Call(callee, paren, args);
   }
@@ -449,6 +467,6 @@ export class Parser {
       return new expr.Grouping(ex);
     }
 
-    throw this.parseError(this.peek(), "Expect expression.");
+    throw this.parseError(this.peek(), 'Expect expression.');
   }
 }

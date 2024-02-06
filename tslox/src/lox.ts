@@ -21,7 +21,7 @@ const interpreter = new Interpreter();
 export async function main(): Promise<void> {
   const args = process.argv.slice(2);
   if (args.length > 1) {
-    console.log("Usage: tslox [script]");
+    console.log('Usage: tslox [script]');
     // this error code convention comes from the UNIX file sysexits.h.
     process.exit(64);
   } else if (args.length === 1) {
@@ -46,7 +46,10 @@ async function runFile(file: string): Promise<void> {
 }
 
 async function runPrompt(): Promise<void> {
-  const prompt = readline.createInterface({ input: process.stdin, output: process.stdout });
+  const prompt = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
   prompt.setPrompt('> ');
 
   // TODO: load hitsory
@@ -105,5 +108,3 @@ async function run(source: string): Promise<void> {
 
   interpreter.interpret(statements);
 }
-
-

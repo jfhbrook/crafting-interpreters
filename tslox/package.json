@@ -5,6 +5,7 @@
   "main": "lox.js",
   "scripts": {
     "build": "npm run ast:generate && tsc",
+    "format": "prettier --write \"src/**.ts\"",
     "start": "npm run build && node ./src/main.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "ast:generate": "tsc ./scripts/*.ts && node ./scripts/generate-ast.js ./src",
@@ -15,6 +16,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "prettier": "^3.2.5",
     "typescript": "^5.3.2"
   },
   "dependencies": {

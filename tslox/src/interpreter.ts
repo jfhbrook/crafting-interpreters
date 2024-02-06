@@ -7,21 +7,24 @@ import { Fn } from './function';
 import { Class } from './class';
 import { errors, Return, RuntimeError } from './error';
 
-function checkNumberOperand(operator: Token, operand: Value): operand is number {
+function checkNumberOperand(
+  operator: Token,
+  operand: Value,
+): operand is number {
   if (typeof operand === 'number') return true;
-  throw new RuntimeError(operator, "Operand must be a number.");
+  throw new RuntimeError(operator, 'Operand must be a number.');
 }
 
 function withNumberOperands(
   operator: Token,
   left: Value,
   right: Value,
-  scope: (left: number, right: number) => Value
+  scope: (left: number, right: number) => Value,
 ): Value {
   if (typeof left === 'number' && typeof right === 'number') {
     return scope(left, right);
   }
-  throw new RuntimeError(operator, "Operands must be numbers.");
+  throw new RuntimeError(operator, 'Operands must be numbers.');
 }
 
 // This is similar to my concept of Flags...
@@ -31,25 +34,27 @@ export interface Flags {
 
 function enumerateStatements(statements: stmt.Stmt[]) {
   return statements.map((statement, i) => {
-    return {i, statement};
+    return { i, statement };
   });
 }
 
 export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   public flags: Flags = { repl: false };
   public readonly globals: Environment;
-  private environment: Environment;;
+  private environment: Environment;
   private locals: Map<expr.Expr, number>;
 
   constructor() {
     this.globals = new Environment();
     this.environment = this.globals;
-    
-    this.globals.define("clock", {
-      arity() { return 0; },
+
+    this.globals.define('clock', {
+      arity() {
+        return 0;
+      },
       call(interpreter: Interpreter, args: Value[]) {
         return Date.now() / 1000;
-      }
+      },
     });
 
     this.locals = new Map();
@@ -57,7 +62,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   public interpret(statements: stmt.Stmt[]): void {
     try {
-      for (let {i, statement} of enumerateStatements(statements)) {
+      for (let { i, statement } of enumerateStatements(statements)) {
         this.execute(statement);
       }
     } catch (err) {
@@ -99,13 +104,12 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       for (let statement of statements) {
         this.execute(statement);
       }
-    } catch(err) {
+    } catch (err) {
       error = err;
     }
     this.environment = previous;
     if (error) throw error;
   }
-
 
   visitBlockStmt(st: stmt.Block): void {
     this.executeBlock(st.statements, new Environment(this.environment));
@@ -164,7 +168,10 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   visitVarStmt(stmt: stmt.Var): void {
     if (this.environment.has(stmt.name)) {
-      throw new RuntimeError(stmt.name, "May not define a variable more than once.");
+      throw new RuntimeError(
+        stmt.name,
+        'May not define a variable more than once.',
+      );
     }
     let value: Value = null;
     if (stmt.initializer != null) {
@@ -216,7 +223,10 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
         } else if (typeof left === 'string' && typeof right === 'string') {
           return left + right;
         }
-        throw new RuntimeError(ex.operator, "Operands must be two numbers or two strings.");
+        throw new RuntimeError(
+          ex.operator,
+          'Operands must be two numbers or two strings.',
+        );
       case TokenType.Slash:
         return withNumberOperands(ex.operator, left, right, (l, r) => l / r);
       case TokenType.Star:
@@ -247,11 +257,14 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     }
 
     if (!isCallable(callee)) {
-      throw new RuntimeError(ex.paren, "Can only call functions and classes.");
+      throw new RuntimeError(ex.paren, 'Can only call functions and classes.');
     }
 
     if (args.length !== callee.arity()) {
-      throw new RuntimeError(ex.paren, `Expected ${callee.arity()} arguments but got ${args.length}.`);
+      throw new RuntimeError(
+        ex.paren,
+        `Expected ${callee.arity()} arguments but got ${args.length}.`,
+      );
     }
     return callee.call(this, args);
   }
@@ -262,7 +275,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       return (object as Instance).get(ex.name);
     }
 
-    throw new RuntimeError(ex.name, "Only instances have properties.");
+    throw new RuntimeError(ex.name, 'Only instances have properties.');
   }
 
   visitGroupingExpr(ex: expr.Grouping): Value {

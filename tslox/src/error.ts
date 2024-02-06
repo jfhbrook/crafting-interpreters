@@ -24,17 +24,24 @@ export class ParseError extends Error {
     return err.code === 'ParseError' && err instanceof Error;
   }
 
-  constructor() { super('ParseError'); }
+  constructor() {
+    super('ParseError');
+  }
 }
 
 export class RuntimeError extends Error {
   code: string = 'RuntimeError';
 
   static isRuntimeError(err: any): err is RuntimeError {
-    return ['RuntimeError', 'Return'].includes(err.code) && err instanceof Error;
+    return (
+      ['RuntimeError', 'Return'].includes(err.code) && err instanceof Error
+    );
   }
 
-  constructor(public readonly token: Token | null, message: string) {
+  constructor(
+    public readonly token: Token | null,
+    message: string,
+  ) {
     super(message);
   }
 }
@@ -78,7 +85,9 @@ export const errors = {
   // super fun to read in a book and not very technically interesting... please
   // do as I say and not as I do.
   report(line: number, where: string, message: string): void {
-    console.error(`[line ${line}] Error${where.length ? ' ' + where : ''}: ${message}`);
+    console.error(
+      `[line ${line}] Error${where.length ? ' ' + where : ''}: ${message}`,
+    );
     this.hadError = true;
-  }
-}
+  },
+};

@@ -52,7 +52,7 @@ export class Environment {
   }
 
   has(name: Token): boolean {
-    return typeof this.values[name.lexeme]  !== 'undefined';
+    return typeof this.values[name.lexeme] !== 'undefined';
   }
 
   assign(name: Token, value: Value): void {

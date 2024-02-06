@@ -16,23 +16,23 @@ function isAlphaNumeric(c: string): boolean {
 }
 
 const keywords: Record<string, TokenType> = {
-  "and": TokenType.And,
-  "class": TokenType.Class,
-  "else": TokenType.Else,
-  "false": TokenType.False,
-  "for": TokenType.For,
-  "fun": TokenType.Fun,
-  "if": TokenType.If,
-  "nil": TokenType.Nil,
-  "or": TokenType.Or,
-  "print": TokenType.Print,
-  "return": TokenType.Return,
-  "super": TokenType.Super,
-  "this": TokenType.This,
-  "true": TokenType.True,
-  "var": TokenType.Var,
-  "while": TokenType.While
-}
+  and: TokenType.And,
+  class: TokenType.Class,
+  else: TokenType.Else,
+  false: TokenType.False,
+  for: TokenType.For,
+  fun: TokenType.Fun,
+  if: TokenType.If,
+  nil: TokenType.Nil,
+  or: TokenType.Or,
+  print: TokenType.Print,
+  return: TokenType.Return,
+  super: TokenType.Super,
+  this: TokenType.This,
+  true: TokenType.True,
+  var: TokenType.Var,
+  while: TokenType.While,
+};
 
 export class Scanner {
   private tokens: Token[];
@@ -40,9 +40,7 @@ export class Scanner {
   private current: number;
   private line: number;
 
-  constructor(
-    private readonly source: string
-  ) {
+  constructor(private readonly source: string) {
     this.tokens = [];
     this.start = 0;
     this.current = 0;
@@ -59,7 +57,7 @@ export class Scanner {
       this.scanToken();
     }
 
-    this.tokens.push(new Token(TokenType.Eof, "", null, this.line));
+    this.tokens.push(new Token(TokenType.Eof, '', null, this.line));
 
     return this.tokens;
   }
@@ -67,16 +65,36 @@ export class Scanner {
   scanToken(): void {
     const c: string = this.advance();
     switch (c) {
-      case '(': this.addToken(TokenType.LeftParen); break;
-      case ')': this.addToken(TokenType.RightParen); break;
-      case '{': this.addToken(TokenType.LeftBrace); break;
-      case '}': this.addToken(TokenType.RightBrace); break;
-      case ',': this.addToken(TokenType.Comma); break;
-      case '.': this.addToken(TokenType.Dot); break;
-      case '-': this.addToken(TokenType.Minus); break;
-      case '+': this.addToken(TokenType.Plus); break;
-      case ';': this.addToken(TokenType.Semicolon); break;
-      case '*': this.addToken(TokenType.Star); break;
+      case '(':
+        this.addToken(TokenType.LeftParen);
+        break;
+      case ')':
+        this.addToken(TokenType.RightParen);
+        break;
+      case '{':
+        this.addToken(TokenType.LeftBrace);
+        break;
+      case '}':
+        this.addToken(TokenType.RightBrace);
+        break;
+      case ',':
+        this.addToken(TokenType.Comma);
+        break;
+      case '.':
+        this.addToken(TokenType.Dot);
+        break;
+      case '-':
+        this.addToken(TokenType.Minus);
+        break;
+      case '+':
+        this.addToken(TokenType.Plus);
+        break;
+      case ';':
+        this.addToken(TokenType.Semicolon);
+        break;
+      case '*':
+        this.addToken(TokenType.Star);
+        break;
       case '!':
         this.addToken(this.match('=') ? TokenType.BangEqual : TokenType.Bang);
         break;
@@ -87,7 +105,9 @@ export class Scanner {
         this.addToken(this.match('=') ? TokenType.LessEqual : TokenType.Less);
         break;
       case '>':
-        this.addToken(this.match('=') ? TokenType.GreaterEqual : TokenType.Greater);
+        this.addToken(
+          this.match('=') ? TokenType.GreaterEqual : TokenType.Greater,
+        );
         break;
       case '/':
         if (this.match('/')) {
@@ -108,7 +128,9 @@ export class Scanner {
       case '\n':
         this.line++;
         break;
-      case '"': this.string(); break;
+      case '"':
+        this.string();
+        break;
       // "note that we *keep scanning*. There may be other errors later in the
       // program. It gives our users a better experience if we detect as many
       // of those as possible in one go. Otherwise, they see one tiny error
@@ -123,8 +145,8 @@ export class Scanner {
           this.number();
         } else if (isAlpha(c)) {
           this.identifier();
-        }else {
-          errors.error(this.line, "Unexpected character.");
+        } else {
+          errors.error(this.line, 'Unexpected character.');
         }
         break;
     }
@@ -170,7 +192,7 @@ export class Scanner {
     }
 
     if (this.isAtEnd()) {
-      errors.error(this.line, "Unterminated string.");
+      errors.error(this.line, 'Unterminated string.');
       return;
     }
 
@@ -194,14 +216,17 @@ export class Scanner {
     // "We could implement [parseFloat] ourselves, but, honestly, unless you're
     // trying to cram for an upcoming programming interview, it's not worth
     // your time."
-    this.addToken(TokenType.Number, parseFloat(this.source.slice(this.start, this.current)));
+    this.addToken(
+      TokenType.Number,
+      parseFloat(this.source.slice(this.start, this.current)),
+    );
   }
 
   identifier(): void {
     while (isAlphaNumeric(this.peek())) this.advance();
 
     const text = this.source.slice(this.start, this.current);
-    const type = keywords[text] || TokenType.Identifier; 
+    const type = keywords[text] || TokenType.Identifier;
 
     this.addToken(type);
   }
