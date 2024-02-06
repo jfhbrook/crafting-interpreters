@@ -24,11 +24,19 @@ static void runtimeError(const char *format, ...) {
   va_end(args);
   fputs("\n", stderr);
 
-  // remember, lines is an array that maps instruction *index* to a line_no
-  CallFrame *frame = &vm.frames[vm.frameCount - 1];
-  size_t instruction = frame->ip - frame->function->chunk.code - 1;
-  int line = frame->function->chunk.lines[instruction];
-  fprintf(stderr, "[line %d] in script\n", line);
+  // Stack traces, yo
+  for (int i = vm.frameCount - 1; i >= 0; i--) {
+    CallFrame *frame = &vm.frames[i];
+    ObjFunction *function = frame->function;
+    size_t instruction = frame->ip - function->chunk.code - 1;
+    fprintf(stderr, "[line %d] in ", function->chunk.lines[instruction]);
+    if (function->name == NULL) {
+      fprintf(stderr, "script\n");
+    } else {
+      fprintf(stderr, "%s()\n", function->name->chars);
+    }
+  }
+
   resetStack();
 }
 
@@ -57,6 +65,40 @@ Value pop() {
 }
 
 static Value peek(int distance) { return vm.stackTop[-1 - distance]; }
+
+static bool call(ObjFunction *function, int argCount) {
+  if (argCount != function->arity) {
+    runtimeError("Expected %d arguments but got %d.", function->arity,
+                 argCount);
+    return false;
+  }
+
+  // Something to test with a recursive call...
+  if (vm.frameCount == FRAMES_MAX) {
+    runtimeError("Stack overflow.");
+    return false;
+  }
+
+  CallFrame *frame = &vm.frames[vm.frameCount++];
+  frame->function = function;
+  frame->ip = function->chunk.code;
+  // The arg count, plus `this`
+  frame->slots = vm.stackTop - argCount - 1;
+  return true;
+}
+
+static bool callValue(Value callee, int argCount) {
+  if (IS_OBJ(callee)) {
+    switch (OBJ_TYPE(callee)) {
+    case OBJ_FUNCTION:
+      return call(AS_FUNCTION(callee), argCount);
+    default:
+      break;
+    }
+  }
+  runtimeError("Can only call functions and classes.");
+  return false;
+}
 
 static bool isFalsey(Value value) {
   return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
@@ -93,6 +135,9 @@ static InterpretResult run() {
     double a = AS_NUMBER(pop());                                               \
     push(valueType(a op b));                                                   \
   } while (false)
+#ifdef DEBUG_TRACE_EXECUTION
+  printf("-- trace --\n");
+#endif
   for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
     printf("          ");
@@ -225,11 +270,35 @@ static InterpretResult run() {
       frame->ip -= offset;
       break;
     }
-    // TODO: Book says to delete this, but deleting it causes the VM to
-    // lock up. My guess is that I missed a step somewhere.
-    case OP_RETURN:
-      // Exit interpreter.
-      return INTERPRET_OK;
+    case OP_CALL: {
+      int argCount = READ_BYTE();
+      if (!callValue(peek(argCount), argCount)) {
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      // Set the current frame to the one we just allocated
+      frame = &vm.frames[vm.frameCount - 1];
+      break;
+    }
+    case OP_RETURN: {
+      // RV at top of stack
+      Value result = pop();
+      // Chuck the prior frame
+      vm.frameCount--;
+      if (vm.frameCount == 0) {
+        // Pop the main function
+        pop();
+        // Exit interpreter.
+        return INTERPRET_OK;
+      }
+
+      // Throw the old frame out of the stack
+      vm.stackTop = frame->slots;
+      // Put the result back on the stack
+      push(result);
+      // Now pointing to our original frame
+      frame = &vm.frames[vm.frameCount - 1];
+      break;
+    }
     }
   }
 #undef READ_BYTE
@@ -245,10 +314,15 @@ InterpretResult interpret(const char *source) {
     return INTERPRET_COMPILE_ERROR;
 
   push(OBJ_VAL(function));
-  CallFrame *frame = &vm.frames[vm.frameCount++];
+  // book has you increment frameCount, but that causes my main frame to get
+  // called twice. I think it's a bug - though, perhaps, not here? Without
+  // tests it's hard to be sure.
+  CallFrame *frame = &vm.frames[vm.frameCount];
   frame->function = function;
   frame->ip = function->chunk.code;
   frame->slots = vm.stack;
+  // set up the call for the main method
+  call(function, 0);
 
   return run();
 }
