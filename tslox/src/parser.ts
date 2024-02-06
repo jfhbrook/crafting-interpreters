@@ -110,6 +110,7 @@ export class Parser {
 
   private declaration(): stmt.Stmt | null {
     try {
+      if (this.match(TokenType.Class)) return this.classDeclaration();
       if (this.match(TokenType.Fun)) return this.function("function");
       if (this.match(TokenType.Var)) return this.varDeclaration();
 
@@ -123,6 +124,22 @@ export class Parser {
       throw err;
     }
   }
+
+  private classDeclaration(): stmt.Stmt {
+    const name: Token = this.consume(TokenType.Identifier, "Expect class name.");
+    this.consume(TokenType.LeftBrace, "Expect '{' before class body.");
+
+    const methods: stmt.Function[] = [];
+
+    while (!this.check(TokenType.RightBrace) && !this.isAtEnd()) {
+      methods.push(this.function("method"));
+    }
+
+    this.consume(TokenType.RightBrace, "Expect '}' after class body.");
+
+    return new stmt.Class(name, methods);
+  }
+
 
   private varDeclaration(): stmt.Stmt {
     const name: Token = this.consume(TokenType.Identifier, "Expect variable name.");

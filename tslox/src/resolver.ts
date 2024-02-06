@@ -27,6 +27,11 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     this.endScope();
   }
 
+  public visitClassStmt(st: stmt.Class): void {
+    this.declare(st.name);
+    this.define(st.name);
+  }
+
   // all the visitors basically do the work of "resolving"
   public resolve(statements: stmt.Stmt[]): void
   public resolve(statement: stmt.Stmt): void
@@ -87,7 +92,7 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   // assuming the variable definition doesn't reference itself, resolve the
   // local variable
   visitVariableExpr(ex: expr.Variable) {
-    if (!this.scopes.length && this.scopes[this.scopes.length - 1][ex.name.lexeme] === false) {
+    if (this.scopes.length && this.scopes[this.scopes.length - 1][ex.name.lexeme] === false) {
       errors.error(ex.name, "Can't read local variable in its own initializer.");
     }
 

@@ -1,5 +1,6 @@
 import { Environment } from './environment';
 import { Interpreter } from './interpreter';
+import { Class } from './class';
 import * as stmt from './stmt';
 
 export interface Callable {
@@ -7,4 +8,4 @@ export interface Callable {
   arity(): number
 }
 
-export type Value = boolean | number | string | Callable | null;
+export type Value = boolean | number | string | Callable | Class | null;

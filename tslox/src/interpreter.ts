@@ -4,6 +4,7 @@ import { Token, TokenType } from './token';
 import { Value } from './value';
 import { Environment } from './environment';
 import { Fn } from './function';
+import { Class } from './class';
 import { errors, Return, RuntimeError } from './error';
 
 function checkNumberOperand(operator: Token, operand: Value): operand is number {
@@ -108,6 +109,12 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   visitBlockStmt(st: stmt.Block): void {
     this.executeBlock(st.statements, new Environment(this.environment));
+  }
+
+  visitClassStmt(st: stmt.Class): void {
+    this.environment.define(st.name.lexeme, null);
+    const cls: Class = new Class(st.name.lexeme);
+    this.environment.assign(st.name, cls);
   }
 
   private evaluate<E extends expr.Expr>(ex: E): Value {
