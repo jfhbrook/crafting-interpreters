@@ -20,8 +20,10 @@ typedef struct {
   Value stack[STACK_MAX];
   Value *stackTop;
   Table globals;
-  // Remember how MSX BASIC has a "strings" area in memory?
+  // Remember how MSX BASIC has a "strings" area in memory? Remember how
+  // WIC&I suggests different dictionaries for different data types?
   Table strings;
+  ObjUpvalue *openUpvalues;
   Obj *objects;
 } VM;
 

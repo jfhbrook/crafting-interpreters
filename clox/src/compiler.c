@@ -45,6 +45,7 @@ typedef struct {
 typedef struct {
   Token name;
   int depth;
+  bool isCaptured;
 } Local;
 
 typedef struct {
@@ -241,7 +242,13 @@ static void endScope() {
   // (note that locals is what is "simulating" the stack)
   while (current->localCount > 0 &&
          current->locals[current->localCount - 1].depth > current->scopeDepth) {
-    emitByte(OP_POP);
+    // If we captured the variable, we need to copy it to the heap instead of
+    // merely throwing it out
+    if (current->locals[current->localCount - 1].isCaptured) {
+      emitByte(OP_CLOSE_UPVALUE);
+    } else {
+      emitByte(OP_POP);
+    }
     current->localCount--;
   }
 }
@@ -552,6 +559,8 @@ static int resolveUpvalue(Compiler *compiler, Token *name) {
   // Resolve the variable name within the enclosing function
   int local = resolveLocal(compiler->enclosing, name);
   if (local != -1) {
+    // We're capturing the local into an upvalue
+    compiler->enclosing->locals[local].isCaptured = true;
     // now we can create an upvalue and return it
     return addUpvalue(compiler, (uint8_t)local, true);
   }
@@ -572,6 +581,7 @@ static void addLocal(Token name) {
   Local *local = &current->locals[current->localCount++];
   local->name = name;
   local->depth = -1; // indicates declared but not initialized
+  local->isCaptured = false;
 }
 
 static void declareVariable() {

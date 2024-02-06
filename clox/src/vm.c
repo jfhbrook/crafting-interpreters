@@ -20,6 +20,7 @@ static Value clockNative(int argCount, Value *args) {
 static void resetStack() {
   vm.stackTop = vm.stack;
   vm.frameCount = 0;
+  vm.openUpvalues = NULL;
 }
 
 static void runtimeError(const char *format, ...) {
@@ -123,8 +124,46 @@ static bool callValue(Value callee, int argCount) {
 }
 
 static ObjUpvalue *captureUpvalue(Value *local) {
+  ObjUpvalue *prevUpvalue = NULL;
+  ObjUpvalue *upvalue = vm.openUpvalues;
+  // Cheeky little pointer comparison lol
+  while (upvalue != NULL && upvalue->location > local) {
+    prevUpvalue = upvalue;
+    upvalue = upvalue->next;
+  }
+
+  if (upvalue != NULL && upvalue->location == local) {
+    return upvalue;
+  }
   ObjUpvalue *createdUpvalue = newUpvalue(local);
+  // upvalue is the upvalue *prior* to our new upvalue
+  createdUpvalue->next = upvalue;
+
+  if (prevUpvalue == NULL) {
+    // Our new upvalue is the head
+    vm.openUpvalues = createdUpvalue;
+  } else {
+    // we're inserting the new upvalue to between the previous and next
+    // upvalue...
+    prevUpvalue->next = createdUpvalue;
+  }
   return createdUpvalue;
+}
+
+static void closeUpvalues(Value *last) {
+  // for any open upvalues which have a location pointer higher than the
+  // location of the value (on the stack) we're closing on...
+  while (vm.openUpvalues != NULL && vm.openUpvalues->location >= last) {
+    // get the top open upvalue
+    ObjUpvalue *upvalue = vm.openUpvalues;
+    // * un-pointers the upvalue's location into a copied value, which lets
+    // us store that value on the upvalue itself
+    upvalue->closed = *upvalue->location;
+    // the location now points to the closed upvalue - this will apparently
+    // be treated as lower than any stack-allocated pointer?
+    upvalue->location = &upvalue->closed;
+    vm.openUpvalues = upvalue->next;
+  }
 }
 
 static bool isFalsey(Value value) {
@@ -336,9 +375,18 @@ static InterpretResult run() {
       }
       break;
     }
+    case OP_CLOSE_UPVALUE:
+      closeUpvalues(vm.stackTop - 1);
+      pop();
+      break;
     case OP_RETURN: {
       // RV at top of stack
       Value result = pop();
+      // we don't actually emit an OP_CLOSE_UPVALUE before a function returns,
+      // just at the end of a block, so we do it here. We do this instead of
+      // explicitly emitting the instructions because we already discard the
+      // slots when we throw out the old frame a few lines from here.
+      closeUpvalues(frame->slots);
       // Chuck the prior frame
       vm.frameCount--;
       if (vm.frameCount == 0) {

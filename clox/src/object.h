@@ -56,6 +56,14 @@ struct ObjString {
 typedef struct ObjUpvalue {
   Obj obj;
   Value *location;
+  Value closed;
+  // the vm needs access to all captured upvalues, so it can reuse an already
+  // captured upvalue. The easiest way to do this is a linked list of upvalues.
+  //
+  // Note that it's OK to do this from a performance perspective, as there
+  // usually aren't very many captured upvalues and we only have to search
+  // until we pass the original slot index *anyway*.
+  struct ObjUpvalue *next;
 } ObjUpvalue;
 
 typedef struct {
