@@ -1,4 +1,5 @@
 #include "compiler.h"
+#include "memory.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -885,4 +886,13 @@ ObjFunction *compile(const char *source) {
   }
   ObjFunction *function = endCompiler();
   return parser.hadError ? NULL : function;
+}
+
+void markCompilerRoots() {
+  Compiler *compiler = current;
+  while (compiler != NULL) {
+    // The current compiler only really has the function it's compiling into...
+    markObject((Obj *)compiler->function);
+    compiler = compiler->enclosing;
+  }
 }
