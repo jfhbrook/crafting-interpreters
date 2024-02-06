@@ -25,7 +25,7 @@ static void runtimeError(const char *format, ...) {
   fputs("\n", stderr);
 
   // remember, lines is an array that maps instruction *index* to a line_no
-  CallFrame* frame = &vm.frames[vm.frameCount - 1];
+  CallFrame *frame = &vm.frames[vm.frameCount - 1];
   size_t instruction = frame->ip - frame->function->chunk.code - 1;
   int line = frame->function->chunk.lines[instruction];
   fprintf(stderr, "[line %d] in script\n", line);
@@ -77,11 +77,10 @@ static void concatenate() {
 }
 
 static InterpretResult run() {
-  CallFrame* frame = &vm.frames[vm.frameCount - 1];
+  CallFrame *frame = &vm.frames[vm.frameCount - 1];
 #define READ_BYTE() (*frame->ip++)
-#define READ_SHORT() \
-  (frame->ip += 2, \
-   (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+#define READ_SHORT()                                                           \
+  (frame->ip += 2, (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
 #define READ_CONSTANT() (frame->function->chunk.constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType, op)                                               \
@@ -104,7 +103,7 @@ static InterpretResult run() {
     }
     printf("\n");
     disassembleInstruction(&frame->function->chunk,
-        (int)(frame->ip - frame->function->chunk.code));
+                           (int)(frame->ip - frame->function->chunk.code));
 #endif
     uint8_t instruction;
     switch (instruction = READ_BYTE()) {
@@ -241,11 +240,12 @@ static InterpretResult run() {
 }
 
 InterpretResult interpret(const char *source) {
-  ObjFunction* function = compile(source);
-  if (function == NULL) return INTERPRET_COMPILE_ERROR;
+  ObjFunction *function = compile(source);
+  if (function == NULL)
+    return INTERPRET_COMPILE_ERROR;
 
   push(OBJ_VAL(function));
-  CallFrame* frame = &vm.frames[vm.frameCount++];
+  CallFrame *frame = &vm.frames[vm.frameCount++];
   frame->function = function;
   frame->ip = function->chunk.code;
   frame->slots = vm.stack;
