@@ -24,6 +24,9 @@ typedef struct {
   // WIC&I suggests different dictionaries for different data types?
   Table strings;
   ObjUpvalue *openUpvalues;
+
+  size_t bytesAllocated;
+  size_t nextGC;
   Obj *objects;
   // A stack of gray values (for gc)
   int grayCount;
