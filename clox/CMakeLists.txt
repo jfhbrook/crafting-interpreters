@@ -29,7 +29,7 @@ target_link_libraries(chunk PRIVATE memory)
 target_link_libraries(chunk PRIVATE value)
 
 add_library(debug_ src/debug.c)
-target_link_libraries(debug_ PRIVATE memory)
+target_link_libraries(value PRIVATE object)
 target_link_libraries(debug_ PRIVATE value)
 
 add_library(scanner src/scanner.c)
