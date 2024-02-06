@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 project(clox VERSION 1.0)
 
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-  add_compile_definitions(DEBUG_PRINT_CODE DEBUG_TRACE_EXECUTION)
-endif(CMAKE_BUILD_TYPE MATCHES Debug)
-
 set(C_STANDARD 23)
 
 include_directories(src)
