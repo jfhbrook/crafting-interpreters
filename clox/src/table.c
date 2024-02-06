@@ -142,6 +142,19 @@ ObjString *tableFindString(Table *table, const char *chars, int length,
   }
 }
 
+// Interned strings get marked by virtue of being reached through other
+// objects. Now we need to remove strings that got marked. This means that
+// the strings table is *basically* a WeakMap.
+void tableRemoveWhite(Table *table) {
+  for (int i = 0; i < table->capacity; i++) {
+    Entry *entry = &table->entries[i];
+    // Remember, we're using the table as a *set* here!
+    if (entry->key != NULL && !entry->key->obj.isMarked) {
+      tableDelete(table, entry->key);
+    }
+  }
+}
+
 void markTable(Table *table) {
   // mark all keys and values in the table
   // (keys are OBJ_STRING)
