@@ -4,6 +4,7 @@ import { Value } from './value'
 Assign   :: name: Token, value: Expr
 Binary   :: left: Expr, operator: Token, right: Expr
 Call     :: callee: Expr, paren: Token, args: Expr[]
+Get      :: object: Expr, name: Token
 Grouping :: expression: Expr
 Literal  :: value: Value
 Logical  :: left: Expr, operator: Token, right: Expr

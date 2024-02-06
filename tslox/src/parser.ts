@@ -403,6 +403,9 @@ export class Parser {
     while (true) {
       if (this.match(TokenType.LeftParen)) {
         ex = this.finishCall(ex);
+      } else if (this.match(TokenType.Dot)) {
+        const name: Token = this.consume(TokenType.Identifier, "Expect property name after '.'.");
+        ex = new expr.Get(ex, name);
       } else {
         break;
       }

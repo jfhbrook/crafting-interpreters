@@ -1,7 +1,7 @@
 import * as expr from './expr';
 import * as stmt from './stmt';
 import { Token, TokenType } from './token';
-import { Value, isCallable } from './value';
+import { Value, isCallable, isInstance, Instance } from './value';
 import { Environment } from './environment';
 import { Fn } from './function';
 import { Class } from './class';
@@ -254,6 +254,15 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       throw new RuntimeError(ex.paren, `Expected ${callee.arity()} arguments but got ${args.length}.`);
     }
     return callee.call(this, args);
+  }
+
+  visitGetExpr(ex: expr.Get): Value {
+    const object: Value = this.evaluate(ex.object);
+    if (isInstance(object)) {
+      return (object as Instance).get(ex.name);
+    }
+
+    throw new RuntimeError(ex.name, "Only instances have properties.");
   }
 
   visitGroupingExpr(ex: expr.Grouping): Value {
