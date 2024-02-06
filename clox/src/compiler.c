@@ -599,7 +599,7 @@ static void function(FunctionType type) {
   // don't need to close scope bc we're ending the compiler anyway
   ObjFunction *function = endCompiler();
   // function def is constant, just like other literals
-  emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+  emitBytes(OP_CLOSURE, makeConstant(OBJ_VAL(function)));
 }
 
 static void funDeclaration() {
