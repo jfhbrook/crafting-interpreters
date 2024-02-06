@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "memory.h"
+#include "vm.h"
 
 void initChunk(Chunk *chunk) {
   chunk->count = 0;
@@ -33,6 +34,11 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
 }
 
 int addConstant(Chunk *chunk, Value value) {
+  // if the write triggers a reallocation, the value will get garbage collected
+  // before the write actually happens. We protect aginst that by temporarily
+  // pushing it onto the symbol stack to create a reference.
+  push(value);
   writeValueArray(&chunk->constants, value);
+  pop();
   return chunk->constants.count - 1;
 }
