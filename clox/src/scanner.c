@@ -104,6 +104,8 @@ static TokenType checkKeyword(int start, int length, const char *rest,
   return TOKEN_IDENTIFIER;
 }
 
+// Unlike jlox/tslox, we're using a trie-like abstraction to match keywords
+// here.
 static TokenType identifierType() {
   switch (scanner.start[0]) {
   case 'a':

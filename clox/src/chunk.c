@@ -1,7 +1,6 @@
-#include "chunk.h"
-
 #include <stdlib.h>
 
+#include "chunk.h"
 #include "memory.h"
 #include "vm.h"
 
@@ -34,7 +33,7 @@ void writeChunk(Chunk *chunk, uint8_t byte, int line) {
 }
 
 int addConstant(Chunk *chunk, Value value) {
-  // if the write triggers a reallocation, the value will get garbage collected
+  // If the write triggers a reallocation, the value will get garbage collected
   // before the write actually happens. We protect aginst that by temporarily
   // pushing it onto the symbol stack to create a reference.
   push(value);

@@ -68,7 +68,7 @@ typedef struct ObjUpvalue {
   Obj obj;
   Value *location;
   Value closed;
-  // the vm needs access to all captured upvalues, so it can reuse an already
+  // The vm needs access to all captured upvalues, so it can reuse an already
   // captured upvalue. The easiest way to do this is a linked list of upvalues.
   //
   // Note that it's OK to do this from a performance perspective, as there
@@ -80,7 +80,7 @@ typedef struct ObjUpvalue {
 typedef struct {
   Obj obj;
   ObjFunction *function;
-  // a pointer to an array of pointers to upvalues
+  // A pointer to an array of pointers to upvalues - hence the double pointer
   ObjUpvalue **upvalues;
   int upvalueCount;
 } ObjClosure;

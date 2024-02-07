@@ -156,8 +156,7 @@ void tableRemoveWhite(Table *table) {
 }
 
 void markTable(Table *table) {
-  // mark all keys and values in the table
-  // (keys are OBJ_STRING)
+  // Mark all keys and values in the table - remember, keys are string objects
   for (int i = 0; i < table->capacity; i++) {
     Entry *entry = &table->entries[i];
     markObject((Obj *)entry->key);

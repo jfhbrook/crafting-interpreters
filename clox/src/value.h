@@ -11,6 +11,9 @@ typedef struct ObjString ObjString;
 typedef enum { VAL_BOOL, VAL_NIL, VAL_NUMBER, VAL_OBJ } ValueType;
 
 #ifdef NAN_BOXING
+// NaN boxing is a technique that crams all our possible values into an f64
+// by abusing IEEE floating point's NaN format.
+//
 // I hate this, so much.
 
 #define SIGN_BIT ((uint64_t)0x8000000000000000)

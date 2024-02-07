@@ -30,7 +30,7 @@ static void runtimeError(const char *format, ...) {
   va_end(args);
   fputs("\n", stderr);
 
-  // Stack traces, yo
+  // Print out actual stack traces by walking through the stack frames!
   for (int i = vm.frameCount - 1; i >= 0; i--) {
     CallFrame *frame = &vm.frames[i];
     ObjFunction *function = frame->closure->function;
@@ -209,7 +209,7 @@ static ObjUpvalue *captureUpvalue(Value *local) {
     // Our new upvalue is the head
     vm.openUpvalues = createdUpvalue;
   } else {
-    // we're inserting the new upvalue to between the previous and next
+    // We're inserting the new upvalue to between the previous and next
     // upvalue...
     prevUpvalue->next = createdUpvalue;
   }
@@ -217,15 +217,15 @@ static ObjUpvalue *captureUpvalue(Value *local) {
 }
 
 static void closeUpvalues(Value *last) {
-  // for any open upvalues which have a location pointer higher than the
+  // For any open upvalues which have a location pointer higher than the
   // location of the value (on the stack) we're closing on...
   while (vm.openUpvalues != NULL && vm.openUpvalues->location >= last) {
-    // get the top open upvalue
+    // Get the top open upvalue
     ObjUpvalue *upvalue = vm.openUpvalues;
-    // * un-pointers the upvalue's location into a copied value, which lets
+    // * "un-pointers" the upvalue's location into a copied value, which lets
     // us store that value on the upvalue itself
     upvalue->closed = *upvalue->location;
-    // the location now points to the closed upvalue - this will apparently
+    // The location now points to the closed upvalue - this will apparently
     // be treated as lower than any stack-allocated pointer?
     upvalue->location = &upvalue->closed;
     vm.openUpvalues = upvalue->next;
@@ -246,6 +246,7 @@ static bool isFalsey(Value value) {
 static void concatenate() {
   // We need to maintain the references to the string values until we have
   // the result, so they don't inadvertently get GC'd during the ALLOCATE.
+  // Hence why we only pop them after allocating the result.
   ObjString *b = AS_STRING(peek(0));
   ObjString *a = AS_STRING(peek(1));
 
@@ -497,11 +498,11 @@ static InterpretResult run() {
       break;
     }
     case OP_CLOSURE: {
-      // read the function from the constants table
+      // Read the function from the constants table
       ObjFunction *function = AS_FUNCTION(READ_CONSTANT());
-      // wrap it in a closure
+      // Wrap it in a closure
       ObjClosure *closure = newClosure(function);
-      // push it onto the symbol stack
+      // Push it onto the symbol stack
       push(OBJ_VAL(closure));
       for (int i = 0; i < closure->upvalueCount; i++) {
         uint8_t isLocal = READ_BYTE();
@@ -519,9 +520,9 @@ static InterpretResult run() {
       pop();
       break;
     case OP_RETURN: {
-      // RV at top of stack
+      // Return value is at the top of the stack
       Value result = pop();
-      // we don't actually emit an OP_CLOSE_UPVALUE before a function returns,
+      // We don't actually emit an OP_CLOSE_UPVALUE before a function returns,
       // just at the end of a block, so we do it here. We do this instead of
       // explicitly emitting the instructions because we already discard the
       // slots when we throw out the old frame a few lines from here.
@@ -575,9 +576,9 @@ InterpretResult interpret(const char *source) {
   if (function == NULL)
     return INTERPRET_COMPILE_ERROR;
 
-  // I think this push/pop is for GC reasons
+  // Push/pop to avoid accidental garbage collection while allocating the
+  // closure
   push(OBJ_VAL(function));
-  // Wrap our function in a closure
   ObjClosure *closure = newClosure(function);
   pop();
   push(OBJ_VAL(closure));

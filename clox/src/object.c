@@ -81,7 +81,7 @@ static ObjString *allocateString(char *chars, int length, uint32_t hash) {
   string->hash = hash;
 
   // tableSet can cause a gc, which would deallocate our newly made string.
-  // we use the symbol stack to keep a reference to it temporarily.
+  // We use the symbol stack to keep a reference to it temporarily.
   push(OBJ_VAL(string));
   tableSet(&vm.strings, string, NIL_VAL);
   pop();
@@ -160,8 +160,7 @@ void printObject(Value value) {
     printf("%s", AS_CSTRING(value));
     break;
   case OBJ_UPVALUE:
-    // User will never print an upvalue object of course... but this hooks
-    // into clox's internal memory management
+    // The user will never print an upvalue object of course...
     printf("upvalue");
     break;
   }

@@ -34,7 +34,6 @@ typedef enum {
   PREC_PRIMARY
 } Precedence;
 
-// is that a fuckin' function pointer? lmao
 typedef void (*ParseFn)(bool canAssign);
 
 typedef struct {
@@ -160,14 +159,13 @@ static void emitLoop(int loopStart) {
 
 static int emitJump(uint8_t instruction) {
   emitByte(instruction);
-  // jump offset is 16 bits, not 8
-  // TODO: Why do we jump the max instead of 0?
+  // Jump offset is 16 bits, not 8
   emitByte(0xff);
   emitByte(0xff);
   return currentChunk()->count - 2;
 }
 
-// implicit and bare returns
+// Emit implicit and bare returns
 static void emitReturn() {
   if (current->type == TYPE_INITIALIZER) {
     // Initializer returns this, not null
@@ -217,8 +215,6 @@ static void initCompiler(Compiler *compiler, FunctionType type) {
   //
   // We only need to create them at runtime if they're nested and we're doing
   // closures.
-  //
-  // NOTE: In BASIC you'd have to do at least some of this at preRun.
   compiler->function = newFunction();
   current = compiler;
   if (type != TYPE_SCRIPT) {
@@ -226,7 +222,7 @@ static void initCompiler(Compiler *compiler, FunctionType type) {
         copyString(parser.previous.start, parser.previous.length);
   }
 
-  // stack slot zero is "for the compiler's internal user." It has an empty
+  // Stack slot zero is "for the compiler's internal use." It has an empty
   // identifier so nobody can reach for it.
   Local *local = &current->locals[current->localCount++];
   local->depth = 0;
@@ -261,10 +257,8 @@ static void beginScope() { current->scopeDepth++; }
 static void endScope() {
   current->scopeDepth--;
 
-  // pop values while:
-  // - there are any locals at all
-  // - the corresponding local is at the current scope depth
-  // (note that locals is what is "simulating" the stack)
+  // Pop values while the corresponding local is at the current scope depth.
+  // Note that `locals` is what is "simulating" the stack.
   while (current->localCount > 0 &&
          current->locals[current->localCount - 1].depth > current->scopeDepth) {
     // If we captured the variable, we need to copy it to the heap instead of
@@ -278,13 +272,18 @@ static void endScope() {
   }
 }
 
+// These are declared ahead of time because there are circular calls.
 static void expression();
 static void statement();
 static void declaration();
 static ParseRule *getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
+
+// These are declared because my functions got out-of-order compared to what
+// they should've been, and it was easier than trying to debug it.
 static uint8_t identifierConstant(Token *name);
 static int resolveLocal(Compiler *compiler, Token *name);
+static int resolveUpvalue(Compiler *compiler, Token *name);
 
 static void binary(bool canAssign) {
   TokenType operatorType = parser.previous.type;
@@ -390,36 +389,36 @@ static void number(bool canAssign) {
 }
 
 static void and_(bool canAssign) {
-  // if the previous expression output is false, we don't need to
+  // If the previous expression output is false, we don't need to
   // evaluate the second expression
   int endJump = emitJump(OP_JUMP_IF_FALSE);
 
-  // we actually need the output of the next expression...
+  // We actually need the output of the next expression...
   emitByte(OP_POP);
-  // parse the second expression
+  // Parse the second expression
   parsePrecedence(PREC_AND);
 
   patchJump(endJump);
-  // if we jumped here, then the output of the first expression is
+  // If we jumped here, then the output of the first expression is
   // what we're looking for
 }
 
 static void or_(bool canAssign) {
-  // if the previous expression is false, then we need to evaluate the
+  // If the previous expression is false, then we need to evaluate the
   // next expression
   int elseJump = emitJump(OP_JUMP_IF_FALSE);
-  // if the previous expression is true, then we know the whole thing
+  // If the previous expression is true, then we know the whole thing
   // is true
   int endJump = emitJump(OP_JUMP);
 
-  // we just jumped the one expression on a falsey case
+  // We just jumped the one expression on a falsey case
   patchJump(elseJump);
-  // we don't need the previous expr value anymore
+  // We don't need the previous expr value anymore
   emitByte(OP_POP);
 
-  // do the next expression
+  // Do the next expression
   parsePrecedence(PREC_OR);
-  // on the true case, we needed to jump past the prior expression
+  // On the true case, we needed to jump past the prior expression
   patchJump(endJump);
 }
 
@@ -427,8 +426,6 @@ static void string(bool canAssign) {
   emitConstant(OBJ_VAL(
       copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
-
-static int resolveUpvalue(Compiler *compiler, Token *name);
 
 static void namedVariable(Token name, bool canAssign) {
   uint8_t getOp, setOp;
@@ -516,7 +513,6 @@ static void unary(bool canAssign) {
   }
 }
 
-// OK, this is actually sick?
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN] = {grouping, call, PREC_CALL},
     [TOKEN_RIGHT_PAREN] = {NULL, NULL, PREC_NONE},
@@ -794,7 +790,7 @@ static void classDeclaration() {
     classCompiler.hasSuperclass = true;
   }
 
-  // loads our class back on the stack so methods can use it
+  // Loads our class back on the stack so methods can use it
   namedVariable(className, false);
   consume(TOKEN_LEFT_BRACE, "Expect '}' before class body.");
 
@@ -803,7 +799,7 @@ static void classDeclaration() {
   }
 
   consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
-  // we don't need the class on the stack anymore
+  // We don't need the class on the stack anymore
   emitByte(OP_POP);
 
   if (classCompiler.hasSuperclass) {
@@ -815,7 +811,7 @@ static void classDeclaration() {
 
 static void funDeclaration() {
   uint8_t global = parseVariable("Expect function name.");
-  // allow self-referential calls
+  // Allow self-referential calls
   markInitialized();
   function(TYPE_FUNCTION);
   defineVariable(global);
@@ -845,11 +841,11 @@ static void forStatement() {
   consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
 
   if (match(TOKEN_SEMICOLON)) {
-    // no initializer.
+    // No initializer.
   } else if (match(TOKEN_VAR)) {
     varDeclaration();
   } else {
-    // call statement because that looks for a semicolon and pops the value
+    // Call statement because that looks for a semicolon and pops the value
     expressionStatement();
   }
 
@@ -865,7 +861,7 @@ static void forStatement() {
   }
 
   if (!match(TOKEN_RIGHT_PAREN)) {
-    // jump to the body immediately and don't eval the increment at the
+    // Jump to the body immediately and don't eval the increment at the
     // beginning
     int bodyJump = emitJump(OP_JUMP);
     int incrementStart = currentChunk()->count;
@@ -895,27 +891,27 @@ static void ifStatement() {
   expression();
   consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
 
-  // if false, stub jumping to the end of the if
+  // If false, stub jumping to the end of the if
   int thenJump = emitJump(OP_JUMP_IF_FALSE);
-  // we start the truthy part by popping the conditional
+  // We start the truthy part by popping the conditional
   emitByte(OP_POP);
-  // emit the truthy part of the if
+  // Emit the truthy part of the if
   statement();
 
-  // at the end of the 'if' block, stub jumping past
+  // At the end of the 'if' block, stub jumping past
   // the else
   int elseJump = emitJump(OP_JUMP);
 
-  // then jump needs to point to the start of the else block (if there is
+  // Then jump needs to point to the start of the else block (if there is
   // one)
   patchJump(thenJump);
-  // we didn't run the truthy leg so we still need to pop the conditional
+  // We didn't run the truthy leg so we still need to pop the conditional
   emitByte(OP_POP);
 
-  // emit the falsey part of the if
+  // Emit the falsey part of the if
   if (match(TOKEN_ELSE))
     statement();
-  // we now the offset for jumping past the else (this is 0 if no else block)
+  // We now the offset for jumping past the else (this is 0 if no else block)
   patchJump(elseJump);
 }
 

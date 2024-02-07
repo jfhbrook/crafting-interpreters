@@ -48,7 +48,7 @@ void markObject(Obj *object) {
 
   object->isMarked = true;
 
-  // push the object onto the gray stack, since we haven't traversed its
+  // Push the object onto the gray stack, since we haven't traversed its
   // children
   if (vm.grayCapacity < vm.grayCount + 1) {
     vm.grayCapacity = GROW_CAPACITY(vm.grayCapacity);
@@ -66,7 +66,7 @@ void markObject(Obj *object) {
 }
 
 void markValue(Value value) {
-  // non-objects (numbers, booleans, nil) aren't objects and don't involve
+  // Non-objects (numbers, booleans, nil) aren't objects and don't involve
   // the heap
   if (IS_OBJ(value))
     markObject(AS_OBJ(value));
@@ -122,7 +122,7 @@ static void blackenObject(Obj *object) {
     break;
   }
   case OBJ_UPVALUE:
-    // marked the upvalue's closed-over value
+    // Marked the upvalue's closed-over value
     markValue(((ObjUpvalue *)object)->closed);
     break;
   // No outgoing references here! Note "black" objects have been marked and
@@ -185,27 +185,27 @@ static void freeObject(Obj *object) {
 }
 
 static void markRoots() {
-  // mark values in the stack
+  // Mark values in the stack
   for (Value *slot = vm.stack; slot < vm.stackTop; slot++) {
     markValue(*slot);
   }
 
-  // mark closure objects stored in open frames
+  // Mark closure objects stored in open frames
   for (int i = 0; i < vm.frameCount; i++) {
     markObject((Obj *)vm.frames[i].closure);
   }
 
-  // mark open upvalue objects
+  // Mark open upvalue objects
   // (closed upvalues are accessible through the closure)
   for (ObjUpvalue *upvalue = vm.openUpvalues; upvalue != NULL;
        upvalue = upvalue->next) {
     markObject((Obj *)upvalue);
   }
 
-  // mark global variables
+  // Mark global variables
   markTable(&vm.globals);
 
-  // values held by a running compiler, such as literals and constants
+  // Mark values held by a running compiler, such as literals and constants
   markCompilerRoots();
   markObject((Obj *)vm.initString);
 }
@@ -226,7 +226,7 @@ static void sweep() {
     if (object->isMarked) {
       // Object is marked, we wanna keep it
 
-      // reset so we get clean state the next time we markensweep
+      // Reset so we get clean state the next time we markensweep
       object->isMarked = false;
       previous = object;
       object = object->next;

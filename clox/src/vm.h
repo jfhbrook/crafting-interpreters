@@ -20,8 +20,8 @@ typedef struct {
   Value stack[STACK_MAX];
   Value *stackTop;
   Table globals;
-  // Remember how MSX BASIC has a "strings" area in memory? Remember how
-  // WIC&I suggests different dictionaries for different data types?
+  // A table of interned strings. The keys store the strings - we're using
+  // the table like a set, not a map.
   Table strings;
   ObjString *initString;
   ObjUpvalue *openUpvalues;
@@ -29,7 +29,8 @@ typedef struct {
   size_t bytesAllocated;
   size_t nextGC;
   Obj *objects;
-  // A stack of gray values (for gc)
+
+  // A stack of gray values, for garbage collection purposes.
   int grayCount;
   int grayCapacity;
   Obj **grayStack;
