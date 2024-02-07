@@ -6,6 +6,28 @@ set(C_STANDARD 23)
 
 include_directories(src)
 
+if(DEFINED ENV{NAN_BOXING})
+  add_compile_definitions(NAN_BOXING)
+endif(DEFINED ENV{NAN_BOXING})
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+  if(DEFINED ENV{DEBUG_STRESS_GC})
+    add_compile_definitions(DEBUG_STRESS_GC)
+  endif(DEFINED ENV{DEBUG_STRESS_GC})
+
+  if(DEFINED ENV{DEBUG_PRINT_CODE})
+    add_compile_definitions(DEBUG_PRINT_CODE)
+  endif(DEFINED ENV{DEBUG_PRINT_CODE})
+
+  if(DEFINED ENV{DEBUG_TRACE_EXECUTION})
+    add_compile_definitions(DEBUG_TRACE_EXECUTION)
+  endif(DEFINED ENV{DEBUG_TRACE_EXECUTION})
+
+  if(DEFINED ENV{DEBUG_LOG_GC})
+    add_compile_definitions(DEBUG_LOG_GC)
+  endif(DEFINED ENV{DEBUG_LOG_GC})
+endif(CMAKE_BUILD_TYPE MATCHES Debug)
+
 add_library(memory src/memory.c)
 
 add_library(value src/value.c)
