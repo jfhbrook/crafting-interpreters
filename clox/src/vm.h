@@ -23,6 +23,7 @@ typedef struct {
   // Remember how MSX BASIC has a "strings" area in memory? Remember how
   // WIC&I suggests different dictionaries for different data types?
   Table strings;
+  ObjString *initString;
   ObjUpvalue *openUpvalues;
 
   size_t bytesAllocated;

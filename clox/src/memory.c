@@ -207,6 +207,7 @@ static void markRoots() {
 
   // values held by a running compiler, such as literals and constants
   markCompilerRoots();
+  markObject((Obj *)vm.initString);
 }
 
 static void traceReferences() {
