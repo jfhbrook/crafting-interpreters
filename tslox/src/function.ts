@@ -1,4 +1,5 @@
 import { Callable, Value } from './value';
+import { Instance } from './class';
 import * as stmt from './stmt';
 import { Environment } from './environment';
 import { Interpreter } from './interpreter';
@@ -31,5 +32,11 @@ export class Fn implements Callable {
     }
 
     return null;
+  }
+
+  bind(instance: Instance) {
+    const environment = new Environment(this.closure);
+    environment.define('this', instance);
+    return new Fn(this.declaration, environment);
   }
 }

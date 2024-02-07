@@ -7,6 +7,7 @@ import { errors } from './error';
 enum FunctionType {
   None,
   Function,
+  Method,
 }
 
 // note this is doing "static" analysis, rather than stateful execution. that
@@ -30,6 +31,15 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   public visitClassStmt(st: stmt.Class): void {
     this.declare(st.name);
     this.define(st.name);
+
+    this.beginScope();
+    this.scopes[this.scopes.length - 1]['this'] = true;
+
+    for (let method of st.methods) {
+      this.resolveFunction(method, FunctionType.Method);
+    }
+
+    this.endScope();
   }
 
   // all the visitors basically do the work of "resolving"
@@ -205,6 +215,15 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   visitLogicalExpr(ex: expr.Logical): void {
     this.resolve(ex.left);
     this.resolve(ex.right);
+  }
+
+  visitSetExpr(ex: expr.Set): void {
+    this.resolve(ex.value);
+    this.resolve(ex.object);
+  }
+
+  visitThisExpr(ex: expr.This): void {
+    this.resolveLocal(ex, ex.keyword);
   }
 
   visitUnaryExpr(ex: expr.Unary): void {

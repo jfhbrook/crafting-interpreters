@@ -314,6 +314,8 @@ export class Parser {
         // turns it into an assignment target.
         const name = ex.name;
         return new expr.Assign(name, value);
+      } else if (ex instanceof expr.Get) {
+        return new expr.Set(ex.object, ex.name, value);
       }
 
       errors.error(equals, 'Invalid assignment type.');
@@ -455,6 +457,10 @@ export class Parser {
 
     if (this.match(TokenType.Number, TokenType.String)) {
       return new expr.Literal(this.previous().literal);
+    }
+
+    if (this.match(TokenType.This)) {
+      return new expr.This(this.previous());
     }
 
     if (this.match(TokenType.Identifier)) {

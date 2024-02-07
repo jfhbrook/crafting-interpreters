@@ -117,7 +117,14 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   visitClassStmt(st: stmt.Class): void {
     this.environment.define(st.name.lexeme, null);
-    const cls: Class = new Class(st.name.lexeme);
+
+    const methods: Map<string, Fn> = new Map();
+    for (let method of st.methods) {
+      const fn: Fn = new Fn(method, this.environment);
+      methods.set(method.name.lexeme, fn);
+    }
+
+    const cls: Class = new Class(st.name.lexeme, methods);
     this.environment.assign(st.name, cls);
   }
 
@@ -208,6 +215,22 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     }
 
     return this.evaluate(ex.right);
+  }
+
+  visitSetExpr(ex: expr.Set): Value {
+    const object: Value = this.evaluate(ex.object);
+
+    if (!isInstance(object)) {
+      throw new RuntimeError(ex.name, 'Only instances have fields.');
+    }
+
+    const value: Value = this.evaluate(ex.value);
+    object.set(ex.name, value);
+    return value;
+  }
+
+  visitThisExpr(ex: expr.This): Value {
+    return this.lookupVariable(ex.keyword, ex);
   }
 
   visitBinaryExpr(ex: expr.Binary): Value {
