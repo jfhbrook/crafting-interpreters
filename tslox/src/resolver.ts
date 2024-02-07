@@ -22,6 +22,9 @@ enum ClassType {
 // The interpreter then uses that to traverse up the correct number of
 // environments to access a variable.
 //
+// This step could easily be baked into the parser, and in fact that's how it's
+// done in clox. But this shows us an example of a multi-stage process.
+//
 // This is a static analysis step, so there aren't otherwise any side
 // effects, nor is there any looping/branching.
 export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
@@ -33,50 +36,14 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     this.scopes = [];
   }
 
-  // create a scope, resolve everything in the block, end the scope
+  // Create a scope, resolve everything in the block, end the scope
   public visitBlockStmt(st: stmt.Block) {
     this.beginScope();
     this.resolve(st.statements);
     this.endScope();
   }
 
-  public visitClassStmt(st: stmt.Class): void {
-    const enclosingClass = this.currentClass;
-    this.currentClass = ClassType.Class;
-
-    this.declare(st.name);
-    this.define(st.name);
-
-    if (st.superclass) {
-      if (st.name.lexeme === st.superclass.name.lexeme) {
-        errors.error(st.superclass.name, "A class can't inherit from itself.");
-      }
-
-      this.currentClass = ClassType.SubClass;
-      this.resolve(st.superclass);
-
-      this.beginScope();
-      this.scopes[this.scopes.length - 1]['super'] = true;
-    }
-
-    this.beginScope();
-    this.scopes[this.scopes.length - 1]['this'] = true;
-
-    for (let method of st.methods) {
-      let declaration = FunctionType.Method;
-      if (method.name.lexeme === 'init') {
-        declaration = FunctionType.Initializer;
-      }
-      this.resolveFunction(method, declaration);
-    }
-
-    this.endScope();
-
-    if (st.superclass) this.endScope();
-    this.currentClass = enclosingClass;
-  }
-
-  // all the visitors basically do the work of "resolving"
+  // All the visitors basically do the work of "resolving"
   public resolve(statements: stmt.Stmt[]): void;
   public resolve(statement: stmt.Stmt): void;
   public resolve(expr: expr.Expr): void;
@@ -104,17 +71,22 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     this.scopes.pop();
   }
 
-  // declare a variable, resolve its initializer if it has one, then *define*
-  // it.
+  // "Why are declaring and defining two separate steps?" Resolving variables
+  // has to happen in the initializer after the variable has been declared
+  // but before it's defined. This is largely so we can ensure a variable
+  // initializer doesn't reference itself.
   visitVarStmt(st: stmt.Var): void {
+    // Declare the variable
     this.declare(st.name);
+    // Resolve its initializer (if it has one)
     if (st.initializer !== null) {
       this.resolve(st.initializer);
     }
+    // Define the variable
     this.define(st.name);
   }
 
-  // mark as declared (in the scope) but NOT resolved (false)
+  // Declaring marks a variable as in-scope, but doesn't treat it as resolved.
   private declare(name: Token): void {
     if (!this.scopes.length) return;
 
@@ -126,15 +98,15 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     scope[name.lexeme] = false;
   }
 
-  // marked as defined by setting to true
+  // A defined variable is not only declared, but has its value assigned.
   private define(name: Token): void {
     if (!this.scopes.length) return;
 
     this.scopes[this.scopes.length - 1][name.lexeme] = true;
   }
 
-  // assuming the variable definition doesn't reference itself, resolve the
-  // local variable
+  // When visiting a variable expression, validate it and then resolve it as
+  // a local variable
   visitVariableExpr(ex: expr.Variable) {
     if (
       this.scopes.length &&
@@ -149,10 +121,10 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     this.resolveLocal(ex, ex.name);
   }
 
-  // resolving a local variable means traversing the scopes from the inside
-  // out (top-down stack-wise) until you find the variable has been either
-  // declared or fully resolved; then tell the interpreter to resolve that
-  // variable by "counting up" to the correct scope at runtime
+  // Resolving a local variable means traversing the scopes from the inside
+  // out (top-down stack-wise) until we find the variable has been either
+  // declared or fully resolved. Then we tell the interpreter to resolve that
+  // variable by "counting up" to the correct scope at runtime.
   private resolveLocal(ex: expr.Expr, name: Token): void {
     for (let i = this.scopes.length - 1; i >= 0; i--) {
       if (typeof this.scopes[i][name.lexeme] === 'boolean') {
@@ -162,14 +134,14 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     }
   }
 
-  // resolve anything in the value getting assigned to it, then resolve the
-  // local variable to that expression
+  // Resolve the value getting assigned, then resolve the local variable in
+  // that expression
   visitAssignExpr(ex: expr.Assign): void {
     this.resolve(ex.value);
     this.resolveLocal(ex, ex.name);
   }
 
-  // create a scope, then declare/define the function's parameters, then
+  // Create a scope, then declare/define the function's parameters, then
   // resolve anything in the body
   visitFunctionStmt(st: stmt.Function): void {
     this.declare(st.name);
@@ -191,8 +163,52 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     this.currentFunction = enclosingFunction;
   }
 
-  // everything from here on is pretty boring, mostly traversing/visiting the
-  // various expressions
+  public visitClassStmt(st: stmt.Class): void {
+    const enclosingClass = this.currentClass;
+    this.currentClass = ClassType.Class;
+
+    // Declare and define the class itself
+    this.declare(st.name);
+    this.define(st.name);
+
+    if (st.superclass) {
+      if (st.name.lexeme === st.superclass.name.lexeme) {
+        errors.error(st.superclass.name, "A class can't inherit from itself.");
+      }
+
+      this.currentClass = ClassType.SubClass;
+
+      // Resolve the superclass
+      this.resolve(st.superclass);
+
+      this.beginScope();
+
+      // Declares and defines 'super'
+      this.scopes[this.scopes.length - 1]['super'] = true;
+    }
+
+    this.beginScope();
+
+    // Declares and defines 'this'
+    this.scopes[this.scopes.length - 1]['this'] = true;
+
+    // Resolve each method
+    for (let method of st.methods) {
+      let declaration = FunctionType.Method;
+      if (method.name.lexeme === 'init') {
+        declaration = FunctionType.Initializer;
+      }
+      this.resolveFunction(method, declaration);
+    }
+
+    this.endScope();
+
+    if (st.superclass) this.endScope();
+    this.currentClass = enclosingClass;
+  }
+
+  // The rest of these are traversing and visiting various expressions, largely
+  // just calling resolve on their children nodes.
   visitExpressionStmt(st: stmt.Expression): void {
     this.resolve(st.expression);
   }

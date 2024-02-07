@@ -3,8 +3,7 @@ import * as expr from './expr';
 import * as stmt from './stmt';
 import { errors, ParseError } from './error';
 
-// I'm 100% doing poor man's tracing here. I might oughta use the actual
-// tracing create in my rusty BASIC for this kind of debug reporting.
+// This is a helper I added for tracing the parser while debugging.
 function debug(...args: any): void {
   if (process.env.DEBUG) {
     console.error(...args);
@@ -81,11 +80,6 @@ export class Parser {
   // at the beginning of the next statement" so that the parser can keep
   // going. This is so we can do a best effort at parsing instead of
   // crashing.
-  //
-  // In the case of my BASIC, I probably want "synchronize" functions which
-  // drop tokens for exprs, instructions and commands respectively. I can
-  // then call these in the code which collects VerboseErrors and reifies
-  // them into Exceptions.
   private synchronize() {
     this.advance();
 
@@ -117,7 +111,6 @@ export class Parser {
       return this.statement();
     } catch (err) {
       if (ParseError.isParseError(err)) {
-        // THERE we go lol
         this.synchronize();
         return null;
       }
@@ -177,7 +170,8 @@ export class Parser {
     return this.expressionStatement();
   }
 
-  // parses into a while statement - that syntactic sugar tho
+  // For statements in jlox/tslox are treated as syntactic sugar for while
+  // statements.
   private forStatement(): stmt.Stmt {
     this.consume(TokenType.LeftParen, "Expect '(' after 'for'.");
     let initializer: stmt.Stmt | null;
@@ -311,7 +305,7 @@ export class Parser {
       const value = this.assignment();
 
       // "the trick is that right before we create the assignment expression
-      // node, we look at the left-hand side exoression and figure out what
+      // node, we look at the left-hand side expression and figure out what
       // kind of assignment target it is. We convert the r-value expression
       // node into an l-value representation.
       if (ex instanceof expr.Variable) {
@@ -327,9 +321,9 @@ export class Parser {
       errors.error(equals, 'Invalid assignment type.');
     }
 
-    // note, if the next token *isn't* an assignment operator, then we just
-    // return the expression as though we didn't do this whole assignment thing
-    // at all.
+    // If the next token *isn't* an assignment operator, then we just return
+    // the expression as though we didn't do this whole assignment thing at
+    // all.
     return ex;
   }
 

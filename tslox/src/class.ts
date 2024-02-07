@@ -43,6 +43,10 @@ export class Class implements Callable {
   }
 }
 
+// In jlox, instance is defined in its own file. But Class and Instance
+// mutually reference each other and there's no compelling reason in
+// TypeScript to break them into multiple files, so Instance lives here as
+// well.
 export class Instance {
   public readonly fields: Map<string, Value>;
   constructor(private cls: Class) {

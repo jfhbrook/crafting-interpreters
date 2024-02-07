@@ -2,7 +2,10 @@ import { Token, TokenType } from './token';
 import { Value } from './value';
 import { errors } from './error';
 
-// this, of course, only works if c is length 1. but of course it is, right?
+// Java has a char type, and in jlox these functions are defined for single
+// characters. TypeScript does *not* have a char type, so we have to use
+// strings. These functions assume the input string is of length 1. This is
+// valid for our purposes, but isn't safe in general.
 function isDigit(c: string): boolean {
   return '0123456789'.includes(c);
 }
@@ -169,7 +172,7 @@ export class Scanner {
     return this.source[this.current];
   }
 
-  // we are at TWO characters of lookahead! lol
+  // We are at TWO characters of lookahead!
   peekNext(): string {
     if (this.current + 1 >= this.source.length) return '\0';
     return this.source[this.current + 1];

@@ -1,16 +1,19 @@
 {
-  "name": "tslox",
+  "name": "@jfhbrook/tslox",
   "version": "1.0.0",
-  "description": "",
+  "description": "A port of jlox from Crafting Interpreters to TypeScript",
+  "bin": {
+    "tslox": "./src/main.js"
+  },
   "main": "lox.js",
   "scripts": {
     "build": "npm run ast:generate && tsc",
-    "format": "prettier --write \"src/**.ts\"",
+    "format": "prettier --write \"src/**.ts\" \"scripts/*.ts\"",
     "start": "npm run build && node ./src/main.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "ast:generate": "tsc ./scripts/*.ts && node ./scripts/generate-ast.js ./src",
     "console": "npm run build && node",
-    "clean": "rm -f ./src/*.js ./scripts/*.js"
+    "clean": "rm -f ./src/*.js ./scripts/*.js",
+    "prepare": "npm run build"
   },
   "author": "Josh Holbrook",
   "license": "ISC",
@@ -20,9 +23,5 @@
     "typescript": "^5.3.2"
   },
   "dependencies": {
-    "read": "^3.0.0"
-  },
-  "volta": {
-    "node": "21.4.0"
   }
 }

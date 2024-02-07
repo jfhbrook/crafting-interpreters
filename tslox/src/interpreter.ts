@@ -1,7 +1,7 @@
 import * as expr from './expr';
 import * as stmt from './stmt';
 import { Token, TokenType } from './token';
-import { Value, isCallable } from './value';
+import { Value, Callable, isCallable } from './value';
 import { Environment } from './environment';
 import { Fn } from './function';
 import { Class, Instance } from './class';
@@ -15,6 +15,7 @@ function checkNumberOperand(
   throw new RuntimeError(operator, 'Operand must be a number.');
 }
 
+// NOTE: This is an abstraction I added to DRY up binary operations.
 function withNumberOperands(
   operator: Token,
   left: Value,
@@ -27,19 +28,18 @@ function withNumberOperands(
   throw new RuntimeError(operator, 'Operands must be numbers.');
 }
 
-// This is similar to my concept of Flags...
-export interface Flags {
-  repl: boolean;
-}
-
-function enumerateStatements(statements: stmt.Stmt[]) {
-  return statements.map((statement, i) => {
-    return { i, statement };
-  });
-}
+// Clock is a native function defined in pure JavaScript. In this case, we
+// just need to implement the Callable interface and otherwise have free rein.
+const CLOCK: Callable = {
+  arity() {
+    return 0;
+  },
+  call(_interpreter: Interpreter, _args: Value[]) {
+    return Date.now() / 1000;
+  },
+};
 
 export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
-  public flags: Flags = { repl: false };
   public readonly globals: Environment;
   private environment: Environment;
   private locals: Map<expr.Expr, number>;
@@ -48,21 +48,14 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     this.globals = new Environment();
     this.environment = this.globals;
 
-    this.globals.define('clock', {
-      arity() {
-        return 0;
-      },
-      call(interpreter: Interpreter, args: Value[]) {
-        return Date.now() / 1000;
-      },
-    });
+    this.globals.define('clock', CLOCK);
 
     this.locals = new Map();
   }
 
   public interpret(statements: stmt.Stmt[]): void {
     try {
-      for (let { i, statement } of enumerateStatements(statements)) {
+      for (let statement of statements) {
         this.execute(statement);
       }
     } catch (err) {

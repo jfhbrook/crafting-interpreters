@@ -1,4 +1,4 @@
-// these are inside the Lox class in bob's interpreter, but that causes us
+// These are inside the Lox class in bob's interpreter, but that causes us
 // an import loop problem - so we define them here and import.
 
 // "it's good engineering practice to separate the code that *generates* the
@@ -7,9 +7,6 @@
 // "Ideally, we would have an actual abstraction, some kind of ErrorReporter
 // interface that gets passed to the scanner and parser so that we can swap
 // out different reporting strategies."
-//
-// in my BASIC, the ErrorReporter functionality will probably be handled by
-// the Host.
 
 import { Token, TokenType } from './token';
 import { Value } from './value';
@@ -17,9 +14,9 @@ import { Value } from './value';
 export class ParseError extends Error {
   code: string = 'ParseError';
 
-  // instanceof checks don't work for errors, since super() transpiles to
-  // Error.call, which throws a type Error in node.js. So we use an error
-  // code instead.
+  // instanceof checks don't work for errors in TypeScript, since super()
+  // transpiles to Error.call, which throws a type Error in node.js. So we use
+  // an error code instead.
   static isParseError(err: any): err is ParseError {
     return err.code === 'ParseError' && err instanceof Error;
   }
@@ -80,7 +77,7 @@ export const errors = {
     this.hadRuntimeError = true;
   },
 
-  // "...the honest truth is that [implementing good error reporting like miette is]
+  // "...the honest truth is that [implementing good error reporting is]
   // a lot of grungy string manipulation code. Very useful for users, but not
   // super fun to read in a book and not very technically interesting... please
   // do as I say and not as I do.

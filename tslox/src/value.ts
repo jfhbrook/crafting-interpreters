@@ -1,11 +1,14 @@
-import { Token } from './token';
-import { Environment } from './environment';
 import { Interpreter } from './interpreter';
 import { Instance } from './class';
-import * as stmt from './stmt';
 
-// We implement Callable as an interface because native functions
-// are implemented with ad-hoc objects.
+// jlox uses Java's internal Object type here. This works there because just
+// about everything in Java is an Object, and Java's types are nullable.
+//
+// That isn't true in TypeScript. While we could've gotten away with using
+// any, I instead decided to create a Value type which encompasses the
+// different kinds of things those Objects could be.
+
+// Callables include Functions, Classes and native functions.
 export interface Callable {
   call(interpreter: Interpreter, args: Value[]): Value;
   arity(): number;
