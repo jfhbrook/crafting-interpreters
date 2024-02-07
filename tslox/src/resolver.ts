@@ -42,6 +42,17 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     this.declare(st.name);
     this.define(st.name);
 
+    if (st.superclass) {
+      if (st.name.lexeme === st.superclass.name.lexeme) {
+        errors.error(st.superclass.name, "A class can't inherit from itself.");
+      }
+
+      this.resolve(st.superclass);
+
+      this.beginScope();
+      this.scopes[this.scopes.length - 1]['super'] = true;
+    }
+
     this.beginScope();
     this.scopes[this.scopes.length - 1]['this'] = true;
 
@@ -54,6 +65,8 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     }
 
     this.endScope();
+
+    if (st.superclass) this.endScope();
     this.currentClass = enclosingClass;
   }
 
@@ -238,6 +251,10 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   visitSetExpr(ex: expr.Set): void {
     this.resolve(ex.value);
     this.resolve(ex.object);
+  }
+
+  visitSuperExpr(ex: expr.Super): void {
+    this.resolveLocal(ex, ex.keyword);
   }
 
   visitThisExpr(ex: expr.This): void {

@@ -7,11 +7,20 @@ import { RuntimeError } from './error';
 export class Class implements Callable {
   constructor(
     public readonly name: string,
+    private readonly superclass: Class | null,
     private readonly methods: Map<string, Fn>,
   ) {}
 
   public findMethod(name: string): Fn | null {
-    return this.methods.get(name) || null;
+    if (this.methods.has(name)) {
+      return this.methods.get(name) || null;
+    }
+
+    if (this.superclass) {
+      return this.superclass.findMethod(name);
+    }
+
+    return null;
   }
 
   public call(interpreter: Interpreter, args: Value[]): Value {

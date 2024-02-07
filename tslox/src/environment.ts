@@ -7,7 +7,7 @@ import { RuntimeError } from './error';
 export class Environment {
   private values: Record<string, Value>;
 
-  constructor(private readonly enclosing: Environment | null = null) {
+  constructor(public readonly enclosing: Environment | null = null) {
     this.values = {};
   }
 

@@ -116,7 +116,24 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   }
 
   visitClassStmt(st: stmt.Class): void {
+    let superclass: Value = null;
+
+    if (st.superclass) {
+      superclass = this.evaluate(st.superclass);
+      if (!(superclass instanceof Class)) {
+        throw new RuntimeError(
+          st.superclass.name,
+          'Superclass must be a class.',
+        );
+      }
+    }
+
     this.environment.define(st.name.lexeme, null);
+
+    if (st.superclass) {
+      this.environment = new Environment(this.environment);
+      this.environment.define('super', superclass);
+    }
 
     const methods: Map<string, Fn> = new Map();
     for (let method of st.methods) {
@@ -128,7 +145,12 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
       methods.set(method.name.lexeme, fn);
     }
 
-    const cls: Class = new Class(st.name.lexeme, methods);
+    const cls: Class = new Class(st.name.lexeme, superclass as Class, methods);
+
+    if (superclass) {
+      this.environment = this.environment.enclosing as Environment;
+    }
+
     this.environment.assign(st.name, cls);
   }
 
@@ -231,6 +253,24 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
     const value: Value = this.evaluate(ex.value);
     object.set(ex.name, value);
     return value;
+  }
+
+  visitSuperExpr(ex: expr.Super): Value {
+    const distance = this.locals.get(ex);
+    if (typeof distance === 'undefined') {
+      throw new RuntimeError(ex.keyword, "'super' is undefined.");
+    }
+    const superclass = this.environment.getAt(distance, 'super') as Class;
+    const object = this.environment.getAt(distance - 1, 'this') as Instance;
+
+    const method = superclass.findMethod(ex.method.lexeme);
+    if (!method) {
+      throw new RuntimeError(
+        ex.method,
+        `'super.${ex.method.lexeme} is undefined.`,
+      );
+    }
+    return method.bind(object);
   }
 
   visitThisExpr(ex: expr.This): Value {
