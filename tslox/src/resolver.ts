@@ -14,6 +14,7 @@ enum FunctionType {
 enum ClassType {
   None,
   Class,
+  SubClass,
 }
 
 // note this is doing "static" analysis, rather than stateful execution. that
@@ -47,6 +48,7 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
         errors.error(st.superclass.name, "A class can't inherit from itself.");
       }
 
+      this.currentClass = ClassType.SubClass;
       this.resolve(st.superclass);
 
       this.beginScope();
@@ -254,6 +256,15 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   }
 
   visitSuperExpr(ex: expr.Super): void {
+    if (this.currentClass === ClassType.None) {
+      errors.error(ex.keyword, "Can't use 'super' outside of a class.");
+    } else if (this.currentClass != ClassType.SubClass) {
+      errors.error(
+        ex.keyword,
+        "Can't user 'super' in a class with no superclass.",
+      );
+    }
+
     this.resolveLocal(ex, ex.keyword);
   }
 
