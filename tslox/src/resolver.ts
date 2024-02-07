@@ -17,9 +17,13 @@ enum ClassType {
   SubClass,
 }
 
-// note this is doing "static" analysis, rather than stateful execution. that
-// means no side effects, and no looping/branching.
-
+// The resolver goes through the parsed code, figures out what variables
+// are being referenced, and sends that information to the interpreter.
+// The interpreter then uses that to traverse up the correct number of
+// environments to access a variable.
+//
+// This is a static analysis step, so there aren't otherwise any side
+// effects, nor is there any looping/branching.
 export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   private readonly scopes: Array<Record<string, boolean>>;
   private currentFunction: FunctionType = FunctionType.None;
