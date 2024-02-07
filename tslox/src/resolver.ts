@@ -10,12 +10,18 @@ enum FunctionType {
   Method,
 }
 
+enum ClassType {
+  None,
+  Class,
+}
+
 // note this is doing "static" analysis, rather than stateful execution. that
 // means no side effects, and no looping/branching.
 
 export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   private readonly scopes: Array<Record<string, boolean>>;
   private currentFunction: FunctionType = FunctionType.None;
+  private currentClass: ClassType = ClassType.None;
 
   constructor(private readonly interpreter: Interpreter) {
     this.scopes = [];
@@ -29,6 +35,9 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   }
 
   public visitClassStmt(st: stmt.Class): void {
+    const enclosingClass = this.currentClass;
+    this.currentClass = ClassType.Class;
+
     this.declare(st.name);
     this.define(st.name);
 
@@ -40,6 +49,7 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     }
 
     this.endScope();
+    this.currentClass = enclosingClass;
   }
 
   // all the visitors basically do the work of "resolving"
@@ -223,6 +233,9 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
   }
 
   visitThisExpr(ex: expr.This): void {
+    if (this.currentClass === ClassType.None) {
+      errors.error(ex.keyword, "Can't use 'this' outside of a class.");
+    }
     this.resolveLocal(ex, ex.keyword);
   }
 
