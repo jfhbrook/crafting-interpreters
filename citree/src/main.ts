@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn } from "child_process";
 import { readFile, writeFile } from "fs/promises";
 
 import { expectEOF, expectSingleResult } from "typescript-parsec";
@@ -39,17 +39,34 @@ export default async function main() {
     );
   }
 
-  if (await which('prettier')) {
-    await Promise.all(Object.keys(types).map(path => new Promise<void>((resolve, reject) => {
-      const format = spawn('prettier', [path, '--write'], {stdio: 'pipe'});
-      format.on('exit', (code) => {
-        if (code) {
-          reject(new Error(`prettier '${path}' --write exited with code ${code}`));
-          return;
-        }
-        resolve();
-      });
-    })));
+  try {
+    await which("prettier");
+    await Promise.all(
+      Object.keys(types).map(
+        (path) =>
+          new Promise<void>((resolve, reject) => {
+            const format = spawn("prettier", [path, "--write"], {
+              stdio: "pipe",
+            });
+            format.on("exit", (code) => {
+              if (code) {
+                reject(
+                  new Error(
+                    `prettier '${path}' --write exited with code ${code}`,
+                  ),
+                );
+                return;
+              }
+              resolve();
+            });
+          }),
+      ),
+    );
+  } catch (err: any) {
+    console.log(err.message);
+    if (err.message !== "not found: prettier") {
+      throw err;
+    }
   }
 }
 
