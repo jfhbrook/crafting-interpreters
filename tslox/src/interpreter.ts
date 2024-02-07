@@ -1,10 +1,10 @@
 import * as expr from './expr';
 import * as stmt from './stmt';
 import { Token, TokenType } from './token';
-import { Value, isCallable, isInstance, Instance } from './value';
+import { Value, isCallable } from './value';
 import { Environment } from './environment';
 import { Fn } from './function';
-import { Class } from './class';
+import { Class, Instance } from './class';
 import { errors, Return, RuntimeError } from './error';
 
 function checkNumberOperand(
@@ -220,7 +220,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   visitSetExpr(ex: expr.Set): Value {
     const object: Value = this.evaluate(ex.object);
 
-    if (!isInstance(object)) {
+    if (!(object instanceof Instance)) {
       throw new RuntimeError(ex.name, 'Only instances have fields.');
     }
 
@@ -294,8 +294,8 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
   visitGetExpr(ex: expr.Get): Value {
     const object: Value = this.evaluate(ex.object);
-    if (isInstance(object)) {
-      return (object as Instance).get(ex.name);
+    if (object instanceof Instance) {
+      return object.get(ex.name);
     }
 
     throw new RuntimeError(ex.name, 'Only instances have properties.');
