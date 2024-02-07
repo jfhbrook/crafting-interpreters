@@ -120,7 +120,11 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
 
     const methods: Map<string, Fn> = new Map();
     for (let method of st.methods) {
-      const fn: Fn = new Fn(method, this.environment);
+      const fn: Fn = new Fn(
+        method,
+        this.environment,
+        method.name.lexeme === 'init',
+      );
       methods.set(method.name.lexeme, fn);
     }
 
@@ -150,7 +154,7 @@ export class Interpreter implements expr.Visitor<Value>, stmt.Visitor<void> {
   }
 
   visitFunctionStmt(st: stmt.Function): void {
-    const fn = new Fn(st, this.environment);
+    const fn = new Fn(st, this.environment, false);
     this.environment.define(st.name.lexeme, fn);
   }
 

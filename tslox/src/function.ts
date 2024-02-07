@@ -9,6 +9,7 @@ export class Fn implements Callable {
   constructor(
     private readonly declaration: stmt.Function,
     private readonly closure: Environment,
+    private readonly isInitializer: boolean,
   ) {}
 
   arity(): number {
@@ -26,17 +27,19 @@ export class Fn implements Callable {
       interpreter.executeBlock(this.declaration.body, environment);
     } catch (err) {
       if (Return.isReturn(err)) {
+        if (this.isInitializer) return this.closure.getAt(0, 'this');
         return err.value;
       }
       throw err;
     }
 
+    if (this.isInitializer) return this.closure.getAt(0, 'this');
     return null;
   }
 
   bind(instance: Instance) {
     const environment = new Environment(this.closure);
     environment.define('this', instance);
-    return new Fn(this.declaration, environment);
+    return new Fn(this.declaration, environment, this.isInitializer);
   }
 }

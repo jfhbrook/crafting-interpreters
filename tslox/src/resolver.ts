@@ -7,6 +7,7 @@ import { errors } from './error';
 enum FunctionType {
   None,
   Function,
+  Initializer,
   Method,
 }
 
@@ -45,7 +46,11 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     this.scopes[this.scopes.length - 1]['this'] = true;
 
     for (let method of st.methods) {
-      this.resolveFunction(method, FunctionType.Method);
+      let declaration = FunctionType.Method;
+      if (method.name.lexeme === 'init') {
+        declaration = FunctionType.Initializer;
+      }
+      this.resolveFunction(method, declaration);
     }
 
     this.endScope();
@@ -190,6 +195,9 @@ export class Resolver implements expr.Visitor<void>, stmt.Visitor<void> {
     }
 
     if (st.value !== null) {
+      if (this.currentFunction === FunctionType.Initializer) {
+        errors.error(st.keyword, "Can't return a value from an initializer.");
+      }
       this.resolve(st.value);
     }
   }

@@ -16,11 +16,17 @@ export class Class implements Callable {
 
   public call(interpreter: Interpreter, args: Value[]): Value {
     const instance: Value = new Instance(this);
+    const initializer = this.findMethod('init');
+    if (initializer !== null) {
+      initializer.bind(instance).call(interpreter, args);
+    }
     return instance;
   }
 
   public arity(): number {
-    return 0;
+    const initializer = this.findMethod('init');
+    if (initializer == null) return 0;
+    return initializer.arity();
   }
 
   public toString(): string {
