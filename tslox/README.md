@@ -14,21 +14,6 @@ As a TypeScript project, everything is handled through `npm`.
 npm install
 ```
 
-### Build
-
-```sh
-npm run build
-```
-
-In addition to running TypeScript, this command also generates TypeScript
-files for the AST.
-
-To clean up build files, do:
-
-```sh
-npm run clean
-```
-
 ### Run
 
 To start a RELP, run:
@@ -41,6 +26,25 @@ To run a file, do:
 
 ```sh
 npm start -- example.lox
+```
+
+This will run the build automatically.
+
+### Build
+
+To run the build manually:
+
+```sh
+npm run build
+```
+
+In addition to running TypeScript, this command also generates TypeScript
+files for the AST.
+
+To clean up build files, do:
+
+```sh
+npm run clean
 ```
 
 ### Formatting
@@ -72,5 +76,3 @@ npm run ast:generate
 ```
 
 The script that does this generation lives [here](./scripts/generate-ast.ts).
-
-## Differences Between jlox and tslox

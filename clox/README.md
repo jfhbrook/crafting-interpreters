@@ -83,3 +83,8 @@ just format
 ```
 
 This will automatically set up `cmake-format` in a virtualenv if necessary.
+
+This project does not do linting, and it doesn't have tests. Note that in a
+real world implementation of a novel interpreter, there would be more tests
+than you could shake a stick at - but this was me following along with a book,
+so alas.
