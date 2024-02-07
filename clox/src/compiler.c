@@ -684,21 +684,38 @@ static void function(FunctionType type) {
   }
 }
 
+static void method() {
+  consume(TOKEN_IDENTIFIER, "Expect method name.");
+  uint8_t constant = identifierConstant(&parser.previous);
+
+  FunctionType type = TYPE_FUNCTION;
+  function(type);
+  emitBytes(OP_METHOD, constant);
+}
+
 static void classDeclaration() {
   consume(TOKEN_IDENTIFIER, "Expect class name.");
+  Token className = parser.previous;
   uint8_t nameConstant = identifierConstant(&parser.previous);
   declareVariable();
 
   emitBytes(OP_CLASS, nameConstant);
   defineVariable(nameConstant);
 
+  // loads our class back on the stack so methods can use it
+  namedVariable(className, false);
   consume(TOKEN_LEFT_BRACE, "Expect '}' before class body.");
+
+  while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+    method();
+  }
+
   consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+  // we don't need the class on the stack anymore
+  emitByte(OP_POP);
 }
 
 static void funDeclaration() {
-  // At the top level, this is a global. I guess we're not supporting
-  // locally defined variables yet?
   uint8_t global = parseVariable("Expect function name.");
   // allow self-referential calls
   markInitialized();
