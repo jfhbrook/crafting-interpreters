@@ -11,8 +11,5 @@ to some language differences between Java and TypeScript.
 The [second](./clox) is the book's C interpreter, minus bugs and plus a
 [cmake](https://cmake.org/) build.
 
-In addition, it also includes an [AST generator DSL](./citree) for TypeScript,
-inspired by the AST generation script used in the Java implementation.
-
 Each project has a brief README which should give some hints on getting them
 running, if you so choose.
