@@ -550,6 +550,7 @@ ParseRule rules[] = {
     [TOKEN_SUPER] = {super_, NULL, PREC_NONE},
     [TOKEN_THIS] = {this_, NULL, PREC_NONE},
     [TOKEN_TRUE] = {literal, NULL, PREC_NONE},
+    [TOKEN_THROW] = {NULL, NULL, PREC_NONE},
     [TOKEN_VAR] = {NULL, NULL, PREC_NONE},
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
     [TOKEN_ERROR] = {NULL, NULL, PREC_NONE},
@@ -954,6 +955,12 @@ static void whileStatement() {
   emitByte(OP_POP);
 }
 
+static void throwStatement() {
+  expression();
+  consume(TOKEN_SEMICOLON, "Expect ';' after value.");
+  emitByte(OP_THROW);
+}
+
 static void synchronize() {
   parser.panicMode = false;
 
@@ -1007,6 +1014,8 @@ static void statement() {
     beginScope();
     block();
     endScope();
+  } else if (match(TOKEN_THROW)) {
+    throwStatement();
   } else {
     expressionStatement();
   }

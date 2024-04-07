@@ -92,6 +92,42 @@ Value pop() {
 
 static Value peek(int distance) { return vm.stackTop[-1 - distance]; }
 
+// Generates a string representing the stack trace. Most of the shenanigans
+// here have to do with allocation - naturally.
+static Value getStackTrace(void) {
+#define MAX_LINE_LENGTH 512
+  int maxStackTraceLength = vm.frameCount * MAX_LINE_LENGTH;
+  char *stacktrace = ALLOCATE(char, maxStackTraceLength);
+  uint16_t index = 0;
+  for (int i = vm.frameCount - 1; i >= 0; i--) {
+    CallFrame *frame = &vm.frames[i];
+    ObjFunction *function = frame->closure->function;
+    size_t instruction = frame->ip - function->chunk.code - 1;
+    uint32_t lineno = function->chunk.lines[instruction];
+    index += snprintf(
+        &stacktrace[index], MAX_LINE_LENGTH, "[line %d] in %s()\n", lineno,
+        function->name == NULL ? "script" : function->name->chars);
+  }
+  stacktrace = GROW_ARRAY(char, stacktrace, maxStackTraceLength, index);
+  return OBJ_VAL(takeString(stacktrace, index));
+#undef MAX_LINE_LENGTH
+}
+
+// Prints out the exception. I'm guessing it's called "propagateException"
+// because it gets extended later.
+void propagateException(void) {
+  // Grabs the exception from the top of the stack
+  ObjInstance *exception = AS_INSTANCE(peek(0));
+  fprintf(stderr, "Unhandled %s\n", exception->cls->name->chars);
+  // Grabs the stack trace value (a string) the exception's "stacktrace" field
+  Value stacktrace;
+  if (tableGet(&exception->fields, copyString("stacktrace", 10), &stacktrace)) {
+    // print it and flush stderr
+    fprintf(stderr, "%s", AS_CSTRING(stacktrace));
+    fflush(stderr);
+  }
+}
+
 static bool call(ObjClosure *closure, int argCount) {
   if (argCount != closure->function->arity) {
     runtimeError("Expected %d arguments but got %d.", closure->function->arity,
@@ -562,6 +598,18 @@ static InterpretResult run() {
     case OP_METHOD:
       defineMethod(READ_STRING());
       break;
+    case OP_THROW: {
+      // Load the stack trace as a string Value
+      Value stacktrace = getStackTrace();
+      // The top value in the stack should be an Exception instance
+      ObjInstance *instance = AS_INSTANCE(peek(0));
+      // Set obj.stacktrace to the stack trace (again, a string Value)
+      tableSet(&instance->fields, copyString("stacktrace", 10), stacktrace);
+      // Print out the exception
+      propagateException();
+      // Bail (for now?)
+      return INTERPRET_RUNTIME_ERROR;
+    }
     }
   }
 #undef READ_BYTE

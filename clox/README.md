@@ -3,8 +3,9 @@
 `clox` is my implementation of the
 [C bytecode VM interpreter](https://craftinginterpreters.com/a-bytecode-virtual-machine.html)
 from [Crafting Interpreters](https://craftinginterpreters.com/). The C parts
-are more or less the same as the implementation in the book, but with some
-extra comments.
+are more or less the same as the implementation in the book. However, it also
+includes exception support, based on
+[this blog series](https://amillioncodemonkeys.com/2021/02/03/interpreter-exception-handling-implementation/).
 
 The book doesn't prescribe a build system, so I used `cmake` and `just`.
 
