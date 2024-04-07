@@ -29,7 +29,9 @@ typedef enum {
   TOKEN_NUMBER,
   // Keywords.
   TOKEN_AND,
+  TOKEN_AS,
   TOKEN_CLASS,
+  TOKEN_CATCH,
   TOKEN_ELSE,
   TOKEN_FALSE,
   TOKEN_FOR,
@@ -43,6 +45,7 @@ typedef enum {
   TOKEN_THIS,
   TOKEN_THROW,
   TOKEN_TRUE,
+  TOKEN_TRY,
   TOKEN_VAR,
   TOKEN_WHILE,
 

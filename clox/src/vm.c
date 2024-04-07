@@ -113,11 +113,48 @@ static Value getStackTrace(void) {
 #undef MAX_LINE_LENGTH
 }
 
-// Prints out the exception. I'm guessing it's called "propagateException"
-// because it gets extended later.
-void propagateException(void) {
+// Not tied to an operator, only used for catch statements - though, this is
+// how the operator would work...
+//
+// Note that this can't check subclasses, since classes in clox aren't
+// aware of their super.
+bool instanceof (ObjInstance * instance, Value cls) {
+  return IS_CLASS(cls) && instance->cls == AS_CLASS(cls);
+}
+
+// Exception propagation.
+//
+// As I understand it, this is different from Python in that Python blocks
+// have their own frame, while clox only has frames for functions. The author
+// appears to make some concessions in order to adopt Python's approach here,
+// and admits that he don't "entirely [understand] the mechanics". I think
+// their approach is a good adaptation. But it will be worth reviewing Python's
+// exception handling code to understand the differences.
+//
+// Returns true if the error was handled.
+bool propagateException(void) {
   // Grabs the exception from the top of the stack
   ObjInstance *exception = AS_INSTANCE(peek(0));
+
+  // Walk up the stack frames and look for a handler
+  while (vm.frameCount > 0) {
+    CallFrame *frame = &vm.frames[vm.frameCount - 1];
+    // The frame can have multiple handlers, one for each handled exception
+    // type
+    for (int numHandlers = frame->handlerCount; numHandlers > 0;
+         numHandlers--) {
+      ExceptionHandler handler = frame->handlerStack[numHandlers - 1];
+      // If the exception type matches...
+      if (instanceof (exception, handler.cls)) {
+        // point the ip to the handler's address within the current closure
+        frame->ip =
+            &frame->closure->function->chunk.code[handler.handlerAddress];
+        return true;
+      }
+    }
+    vm.frameCount--;
+  }
+  // Error unhandled - print and exit
   fprintf(stderr, "Unhandled %s\n", exception->cls->name->chars);
   // Grabs the stack trace value (a string) the exception's "stacktrace" field
   Value stacktrace;
@@ -126,6 +163,18 @@ void propagateException(void) {
     fprintf(stderr, "%s", AS_CSTRING(stacktrace));
     fflush(stderr);
   }
+  return false;
+}
+
+void pushExceptionHandler(Value type, uint16_t handlerAddress) {
+  CallFrame *frame = &vm.frames[vm.frameCount - 1];
+  if (frame->handlerCount == MAX_HANDLER_FRAMES) {
+    runtimeError("Too many nested exception handlers in one function.");
+    return;
+  }
+  frame->handlerStack[frame->handlerCount].handlerAddress = handlerAddress;
+  frame->handlerStack[frame->handlerCount].cls = type;
+  frame->handlerCount++;
 }
 
 static bool call(ObjClosure *closure, int argCount) {
@@ -605,10 +654,31 @@ static InterpretResult run() {
       ObjInstance *instance = AS_INSTANCE(peek(0));
       // Set obj.stacktrace to the stack trace (again, a string Value)
       tableSet(&instance->fields, copyString("stacktrace", 10), stacktrace);
-      // Print out the exception
-      propagateException();
-      // Bail (for now?)
+      // Unwind the stack until a handler is found (or just unwind the whole
+      // thing and barf)
+      if (propagateException()) {
+        // If the exception was handled, we can drop any frames we threw out
+        // while propagating the exception.
+        frame = &vm.frames[vm.frameCount - 1];
+        break;
+      }
+      // If the exception isn't handled, it's a runtime error
       return INTERPRET_RUNTIME_ERROR;
+    }
+    case OP_PUSH_EXCEPTION_HANDLER: {
+      ObjString *typeName = READ_STRING();
+      uint16_t handlerAddress = READ_SHORT();
+      Value value;
+      if (!tableGet(&vm.globals, typeName, &value) || !IS_CLASS(value)) {
+        runtimeError("'%s' is not a type to catch", typeName->chars);
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      pushExceptionHandler(value, handlerAddress);
+      break;
+    }
+    case OP_POP_EXCEPTION_HANDLER: {
+      frame->handlerCount--;
+      break;
     }
     }
   }

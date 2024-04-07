@@ -204,6 +204,13 @@ static void patchJump(int offset) {
   currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
+// Takes the 16 bit address stored at the current offset and patches it
+// back to the passed-in offset.
+static void patchAddress(int offset) {
+  currentChunk()->code[offset] = (currentChunk()->count >> 8) & 0xff;
+  currentChunk()->code[offset + 1] = currentChunk()->count & 0xff;
+}
+
 static void initCompiler(Compiler *compiler, FunctionType type) {
   compiler->enclosing = current;
   compiler->function = NULL;
@@ -537,6 +544,8 @@ ParseRule rules[] = {
     [TOKEN_STRING] = {string, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, and_, PREC_AND},
+    [TOKEN_AS] = {NULL, NULL, PREC_NONE},
+    [TOKEN_CATCH] = {NULL, NULL, PREC_NONE},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
     [TOKEN_FALSE] = {literal, NULL, PREC_NONE},
@@ -551,6 +560,7 @@ ParseRule rules[] = {
     [TOKEN_THIS] = {this_, NULL, PREC_NONE},
     [TOKEN_TRUE] = {literal, NULL, PREC_NONE},
     [TOKEN_THROW] = {NULL, NULL, PREC_NONE},
+    [TOKEN_TRY] = {NULL, NULL, PREC_NONE},
     [TOKEN_VAR] = {NULL, NULL, PREC_NONE},
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
     [TOKEN_ERROR] = {NULL, NULL, PREC_NONE},
@@ -959,6 +969,58 @@ static void throwStatement() {
   expression();
   consume(TOKEN_SEMICOLON, "Expect ';' after value.");
   emitByte(OP_THROW);
+}
+
+static void tryCatchStatement() {
+  // PUSH_EXC_HANDLER <type_ident_const> <handler_addr>
+  emitByte(OP_PUSH_EXCEPTION_HANDLER);
+  // The index of the exception type
+  int exceptionType = currentChunk()->count;
+  // The stand-in for the exception type
+  emitByte(0xff);
+  // The index of the handler address
+  int handlerAddress = currentChunk()->count;
+  // The stand-in for the handler address
+  emitBytes(0xff, 0xff);
+
+  // The contents of the try (probably a block, may contain a "throw")
+  statement();
+
+  // If we get here, the try block was successful
+
+  // Pop the exception handler because we no longer need it
+  emitByte(OP_POP_EXCEPTION_HANDLER);
+  // jump past the catch
+  int successJump = emitJump(OP_JUMP);
+
+  // Matches the catch
+  if (match(TOKEN_CATCH)) {
+    // catch block has scope, naturally
+    beginScope();
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'catch'");
+    consume(TOKEN_IDENTIFIER, "Expect type name after catch");
+    // The type name is an identifier constant
+    uint8_t name = identifierConstant(&parser.previous);
+    // patch the type of the exception
+    currentChunk()->code[exceptionType] = name;
+    // patch the address to the handler
+    patchAddress(handlerAddress);
+    if (match(TOKEN_AS)) {
+      // Create a local variable
+      consume(TOKEN_IDENTIFIER, "Expect identifier for exception instance");
+      addLocal(parser.previous);
+      markInitialized();
+      uint8_t ex_var = resolveLocal(current, &parser.previous);
+      emitBytes(OP_SET_LOCAL, ex_var);
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after catch statement");
+    emitByte(OP_POP_EXCEPTION_HANDLER);
+
+    // The contents of the catch (probably a block)
+    statement();
+
+    endScope();
+  }
 }
 
 static void synchronize() {
