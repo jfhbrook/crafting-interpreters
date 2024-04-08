@@ -549,6 +549,7 @@ ParseRule rules[] = {
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
     [TOKEN_FALSE] = {literal, NULL, PREC_NONE},
+    [TOKEN_FINALLY] = {NULL, NULL, PREC_NONE},
     [TOKEN_FOR] = {NULL, NULL, PREC_NONE},
     [TOKEN_FUN] = {NULL, NULL, PREC_NONE},
     [TOKEN_IF] = {NULL, NULL, PREC_NONE},
@@ -982,6 +983,10 @@ static void tryCatchStatement() {
   int handlerAddress = currentChunk()->count;
   // The stand-in for the handler address
   emitBytes(0xff, 0xff);
+  // The index of the finally address
+  int finallyAddress = currentChunk()->count;
+  // The stand-in for the finally address
+  emitBytes(0xff, 0xff);
 
   // The contents of the try (probably a block, may contain a "throw")
   statement();
@@ -992,6 +997,23 @@ static void tryCatchStatement() {
   emitByte(OP_POP_EXCEPTION_HANDLER);
   // jump past the catch
   int successJump = emitJump(OP_JUMP);
+
+  // TODO: Suppose we have a finally statement, but not a catch statement.
+  // In that case we would still need an ExceptionHandler, since it's the
+  // handler that knows where the finally statement is. But the current code
+  // assumes that a handler has both a valid exception type and a valid
+  // handler address. Right now we don't set any defaults for those, so the
+  // interpreter segfaults when it tries to read the typeName as a string
+  // during execution of OP_PUSH_EXCEPTION_HANDLER.
+  //
+  // The most straightforward fix is probably treating 0xffff as a null value
+  // for the type. This is how the blog series handles finally, more or less.
+  // Basically, if the type's address is 0xffff, don't attempt to load the
+  // constant and set the value to NULL instead. Then, in propagateException,
+  // say that the exception type doesn't match if that type is NULL.
+  //
+  // This isn't my favorite, and I'm not sure that this treatment of 0xff is
+  // canonically the best way to handle this sort of thing. But maybe?
 
   // Matches the catch
   if (match(TOKEN_CATCH)) {
@@ -1020,6 +1042,30 @@ static void tryCatchStatement() {
     statement();
 
     endScope();
+  }
+  patchJump(successJump);
+
+  // Matches the finally
+  if (match(TOKEN_FINALLY)) {
+    // Set if the block was successful
+    // NOTE: error propagation pushes a TRUE_VAL so we don't need to do it
+    // in the bytecode
+    emitByte(OP_FALSE);
+
+    // In the error case, jump here actually
+    patchAddress(finallyAddress);
+
+    statement();
+
+    // Jump past error propagation if the block was successful
+    int continueExecution = emitJump(OP_JUMP_IF_FALSE);
+    // Pop the emitted "false" byte
+    emitByte(OP_POP);
+    emitByte(OP_PROPAGATE_EXCEPTION);
+    // Here if the block was successful
+    patchJump(continueExecution);
+    // Pop the emitted "true" byte
+    emitByte(OP_POP);
   }
 }
 
@@ -1078,6 +1124,8 @@ static void statement() {
     endScope();
   } else if (match(TOKEN_THROW)) {
     throwStatement();
+  } else if (match(TOKEN_TRY)) {
+    tryCatchStatement();
   } else {
     expressionStatement();
   }

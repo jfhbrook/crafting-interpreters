@@ -133,6 +133,7 @@ bool instanceof (ObjInstance * instance, Value cls) {
 //
 // Returns true if the error was handled.
 bool propagateException(void) {
+#define PLACEHOLDER_ADDRESS 0xffff
   // Grabs the exception from the top of the stack
   ObjInstance *exception = AS_INSTANCE(peek(0));
 
@@ -150,6 +151,13 @@ bool propagateException(void) {
         frame->ip =
             &frame->closure->function->chunk.code[handler.handlerAddress];
         return true;
+      } else if (handler.finallyAddress != PLACEHOLDER_ADDRESS) {
+        // Signal to the "finally" block that we threw
+        push(TRUE_VAL);
+        // Set the "finally" address
+        frame->ip =
+            &frame->closure->function->chunk.code[handler.finallyAddress];
+        return true;
       }
     }
     vm.frameCount--;
@@ -164,15 +172,18 @@ bool propagateException(void) {
     fflush(stderr);
   }
   return false;
+#undef PLACEHOLDER_ADDRESS
 }
 
-void pushExceptionHandler(Value type, uint16_t handlerAddress) {
+void pushExceptionHandler(Value type, uint16_t handlerAddress,
+                          uint16_t finallyAddress) {
   CallFrame *frame = &vm.frames[vm.frameCount - 1];
   if (frame->handlerCount == MAX_HANDLER_FRAMES) {
     runtimeError("Too many nested exception handlers in one function.");
     return;
   }
   frame->handlerStack[frame->handlerCount].handlerAddress = handlerAddress;
+  frame->handlerStack[frame->handlerCount].finallyAddress = finallyAddress;
   frame->handlerStack[frame->handlerCount].cls = type;
   frame->handlerCount++;
 }
@@ -668,17 +679,27 @@ static InterpretResult run() {
     case OP_PUSH_EXCEPTION_HANDLER: {
       ObjString *typeName = READ_STRING();
       uint16_t handlerAddress = READ_SHORT();
+      uint16_t finallyAddress = READ_SHORT();
       Value value;
       if (!tableGet(&vm.globals, typeName, &value) || !IS_CLASS(value)) {
         runtimeError("'%s' is not a type to catch", typeName->chars);
         return INTERPRET_RUNTIME_ERROR;
       }
-      pushExceptionHandler(value, handlerAddress);
+      printf("after\n");
+      pushExceptionHandler(value, handlerAddress, finallyAddress);
       break;
     }
     case OP_POP_EXCEPTION_HANDLER: {
       frame->handlerCount--;
       break;
+    }
+    case OP_PROPAGATE_EXCEPTION: {
+      frame->handlerCount--;
+      if (propagateException()) {
+        frame = &vm.frames[vm.frameCount - 1];
+        break;
+      }
+      return INTERPRET_RUNTIME_ERROR;
     }
     }
   }

@@ -1,0 +1,7 @@
+try {
+  throw Exception();
+} catch(Exception) {
+  print "caught";
+} finally {
+  print "finally.";
+}

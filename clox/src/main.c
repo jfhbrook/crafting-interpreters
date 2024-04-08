@@ -4,10 +4,12 @@
 
 #include "chunk.h"
 #include "common.h"
+#include "prelude.h"
 #include "vm.h"
 
 static void repl() {
   char line[1024];
+
   for (;;) {
     printf("> ");
 
@@ -57,6 +59,13 @@ static void runFile(const char *path) {
 
 int main(int argc, const char *argv[]) {
   initVM();
+
+  InterpretResult preludeResult = interpret(PRELUDE);
+
+  if (preludeResult == INTERPRET_COMPILE_ERROR)
+    exit(65);
+  if (preludeResult == INTERPRET_RUNTIME_ERROR)
+    exit(70);
 
   if (argc == 1) {
     repl();
